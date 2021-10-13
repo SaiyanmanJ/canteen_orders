@@ -3,10 +3,34 @@
 
 <mapper namespace="com.wj.product.mapper.ProductMapper">
 
+    <insert id="insert">
+        insert into product (name, price, additinal, seller_id)
+        values (#{name}, #{price}, #{additinal}, #{sellerId})
+    </insert>
+    <delete id="delete">
+        delete from product where id = #{id}
+    </delete>
+
+    <update id="update">
+        update product set name = #{name}, price = #{price}, additinal = #{additinal}, count = #{count} where id = #{id}
+    </update>
 
     <select id="getProductsBySellerId" resultType="com.wj.product.entity.Product">
-        select * from product where id = #{sellerId}
+        select *
+        from product
+        where seller_id = #{sellerId}
     </select>
 
+    <select id="getProductById" resultType="com.wj.product.entity.Product">
+        select * from product where id = #{productId}
+    </select>
+
+    
+    <select id="getProductsByIds" resultType="com.wj.product.entity.Product">
+        select * from product where id in
+        <foreach collection="list" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
 </mapper>
 

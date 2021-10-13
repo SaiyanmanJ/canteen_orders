@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: nacos-payment-provider
+    name: nacos-product-service
   cloud:
     nacos:
       discovery:
@@ -23,3 +23,5 @@ management:
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true

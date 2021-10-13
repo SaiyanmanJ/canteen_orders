@@ -1,16 +1,13 @@
 package com.wj.product.controller;
 
 import com.wj.commons.CommonResult;
-import com.wj.product.entity.Canteen;
+import com.wj.dto.OrderItemDTO;
+import com.wj.product.entity.Product;
 import com.wj.product.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -22,24 +19,54 @@ import java.util.List;
 @Slf4j
 public class ProductController {
 
-    @Resource
+    @Autowired
     private ProductService productService;
 
-    /**
-     * 浏览商品 选择学校,食堂,第几层楼 会展示按照窗口展示商品
-     */
-
-//    @GetMapping(value = "/product/{school_id}/{canteen_id}/{layer}")
-//    public CommonResult list(@PathVariable("school_id") Long school_id, @PathVariable("canteen_id") Long canteen_id, @PathVariable("layer") Integer layer) {
-//        List<Canteen> data = productService.getCanteenLayer(school_id, canteen_id, layer);
-//        log.info("查询某校某座食堂某层的所有窗口的产品");
-//        return new CommonResult(200, "查询成功", data);
-//    }
-
-    @GetMapping(value = "/product/{sellerId}")
+    @GetMapping(value = "/product/getBySeller/{sellerId}")
     public CommonResult getSellerProducts(@PathVariable("sellerId") Long sellerId){
-        List<Canteen> products = productService.getSellerProducts(sellerId);
+        List<Product> products = productService.getSellerProducts(sellerId);
         log.info("--------查询seller的products---------");
         return new CommonResult(200, "查询成功", products);
+    }
+
+    @GetMapping(value = "/product/getById/{id}")
+    public CommonResult getProductById(@PathVariable("id") Long id){
+        Product product = productService.getProductById(id);
+        log.info("--------根据id查询单个product------------");
+        return new CommonResult(200, "查询成功", product);
+    }
+
+    @PostMapping(value = "/product/insert")
+    public CommonResult addProduct(@RequestBody Product product){
+        productService.insert(product);
+        log.info("------------插入product----------");
+        return new CommonResult(200, "插入成功");
+    }
+    @PostMapping(value = "/product/update")
+    public CommonResult changeProduct(@RequestBody Product product){
+        productService.update(product);
+        log.info("------------修改product----------");
+        return new CommonResult(200, "修改成功");
+    }
+
+    @GetMapping(value = "/product/delete/{id}")
+    public CommonResult deleteProduct(@PathVariable("id") Long id){
+        productService.deleteById(id);
+        log.info("-------------删除product");
+        return new CommonResult(200, "删除成功");
+    }
+
+//    根据orderItem中的productId查询product  @RequestBody必须用@PostMapping
+    @PostMapping(value = "/product/getByIds")
+    public List<Product> getProductsByIds(@RequestBody List<Long> ids){
+        List<Product> products = productService.getProductsByIds(ids);
+        return products;
+    }
+//    减库存
+
+    @PostMapping(value = "/product/decrease")
+    public CommonResult decreaseProductCount(@RequestBody List<OrderItemDTO> orderItemDTOList){
+        productService.decrease(orderItemDTOList);
+        return new CommonResult(200, "减库存成功");
     }
 }

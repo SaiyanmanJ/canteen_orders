@@ -19,5 +19,8 @@ public class Product {
     private BigDecimal price;
 //  额外说明
     private String additinal;
-
+//  所属窗口
+    private Long sellerId;
+//    数量
+    private Integer count;
 }

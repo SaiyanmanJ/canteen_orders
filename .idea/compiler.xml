@@ -10,6 +10,7 @@
         <module name="api-commons" />
         <module name="product" />
         <module name="nacos" />
+        <module name="order" />
       </profile>
     </annotationProcessing>
   </component>

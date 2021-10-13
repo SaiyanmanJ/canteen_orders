@@ -4,8 +4,16 @@
 <mapper namespace="com.wj.product.mapper.SellerMapper">
 
 
-    <select id="getByCanteenAndLayerId" resultType="com.wj.product.entity.Seller">
+    <select id="getByCanteenAndLayerId" resultMap="Seller">
         select * from seller where canteen_id = #{canteen_id} and layer = #{layer}
     </select>
+
+    <resultMap id="Seller" type="com.wj.product.entity.Seller">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="layer" property="layer"/>
+        <result column="position" property="position"/>
+        <collection property="products" select="com.wj.product.mapper.ProductMapper.getProductsBySellerId" column="id"/>
+    </resultMap>
 </mapper>
 

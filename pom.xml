@@ -13,6 +13,7 @@
         <module>nacos</module>
         <module>product</module>
         <module>api-commons</module>
+        <module>order</module>
     </modules>
 
 
@@ -28,6 +29,7 @@
         <druid.version>1.1.16</druid.version>
         <mybatis.spring.boot.version>1.3.0</mybatis.spring.boot.version>
         <mybatisplus.spring.boot.version>3.4.0</mybatisplus.spring.boot.version>
+        <hutool.version>5.7.14</hutool.version>
     </properties>
 
     <!-- 子模块继承之后，提供作用：锁定版本 + 子modlue不用写groupId和version  -->
@@ -93,6 +95,11 @@
                 <version>${lombok.version}</version>
                 <optional>true</optional>
             </dependency>
+<!--            <dependency>-->
+<!--                <groupId>cn.hutool</groupId>-->
+<!--                <artifactId>hutool-all</artifactId>-->
+<!--                <version>${hutool.version}</version>-->
+<!--            </dependency>-->
         </dependencies>
     </dependencyManagement>
 
