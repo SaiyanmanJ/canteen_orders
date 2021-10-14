@@ -30,6 +30,7 @@
         <mybatis.spring.boot.version>1.3.0</mybatis.spring.boot.version>
         <mybatisplus.spring.boot.version>3.4.0</mybatisplus.spring.boot.version>
         <hutool.version>5.7.14</hutool.version>
+        <bootstrap.version>3.0.2</bootstrap.version>
     </properties>
 
     <!-- 子模块继承之后，提供作用：锁定版本 + 子modlue不用写groupId和version  -->
@@ -51,6 +52,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
             <!--spring cloud alibaba 2.1.0.RELEASE-->
             <dependency>
                 <groupId>com.alibaba.cloud</groupId>

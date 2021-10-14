@@ -7,7 +7,9 @@ import com.wj.order.entity.Product;
 import com.wj.order.service.OrderItemService;
 import com.wj.order.service.OrderService;
 import com.wj.order.service.ProductService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +22,7 @@ import java.util.List;
  * @time 2021/10/12 15:44
  */
 @RestController
+@Slf4j
 public class OrderController {
 
     @Autowired
@@ -41,6 +44,7 @@ public class OrderController {
     @PostMapping(value = "/order/insert")
     public CommonResult create(@RequestBody Order order){
 
+        log.info("订单传入：" + order);
         orderService.insert(order);
         return new CommonResult(200, "订单创建成功");
     }

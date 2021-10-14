@@ -4,8 +4,8 @@
 <mapper namespace="com.wj.order.mapper.OrderItemMapper">
 
     <insert id="insert">
-        insert into order_item (order_id, product_id, count)
-        values (#{orderId}, #{product.id}, #{count})
+        insert into order_item (order_id, product_id, count, seller_id)
+        values (#{orderId}, #{product.id}, #{count}, #{sellerId})
     </insert>
 
     <delete id="delete">

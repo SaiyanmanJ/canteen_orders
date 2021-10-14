@@ -18,14 +18,14 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class Order {
-
+//  订单id
     private Long id;
-
+//  支付状态
     private Integer payStatus;
-
+//  总价
     private BigDecimal price;
-
+//  用户id
     private Long userId;
-
+//  订单项
     private List<OrderItem> orderItems;
 }

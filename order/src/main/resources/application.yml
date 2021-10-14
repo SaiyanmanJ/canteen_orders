@@ -2,31 +2,20 @@ server:
   port: 8001
 
 spring:
-  application:
-    name: nacos-order-service
-  cloud:
-    nacos:
-      discovery:
-        server-addr: localhost:8848
+  main:
+    allow-bean-definition-overriding: true
 
-
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/canteen_order?characterEncoding=utf-8
-    username: remoteroot
-    password: 123456
+mybatis:
+  mapper-locations: classpath:mapper/*.xml # mappler.xml文件路径
+  configuration:
+    map-underscore-to-camel-case: true # 开启下划线到驼峰命名的映射
 
 management:
   endpoints:
     web:
       exposure:
-        include: '*'
+        include: '*' # 暴露所有接口
 
-mybatis:
-  mapper-locations: classpath:mapper/*.xml
-  configuration:
-    map-underscore-to-camel-case: true
-
-#消费者将要去访问的微服务名称(注册成功进nacos的微服务提供者)
-service-url:
-  nacos-user-service: http://nacos-product-service
+##消费者将要去访问的微服务名称(注册成功进nacos的微服务提供者)
+#service-url:
+#  nacos-user-service: http://nacos-product-service

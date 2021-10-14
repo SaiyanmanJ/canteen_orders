@@ -4,6 +4,7 @@ import com.wj.order.entity.OrderItem;
 import com.wj.order.entity.Product;
 import com.wj.order.mapper.OrderItemMapper;
 import com.wj.order.service.OrderItemService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ import java.util.List;
  * @time 2021/10/12 22:27
  */
 @Service
+@Slf4j
 public class OrderItemServiceImpl implements OrderItemService {
 
     @Autowired
@@ -37,6 +39,7 @@ public class OrderItemServiceImpl implements OrderItemService {
 
     @Override
     public void insert(OrderItem orderItem) {
+        log.info("insert: " + orderItem);
         orderItemMapper.insert(orderItem);
     }
 
