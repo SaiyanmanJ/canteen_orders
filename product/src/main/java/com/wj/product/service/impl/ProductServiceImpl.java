@@ -52,6 +52,7 @@ public class ProductServiceImpl implements ProductService {
         return productMapper.getProductsByIds(ids);
     }
 
+//    减库存
     @Override
     @Transactional  //加上事务
     public void decrease(List<OrderItemDTO> orderItemDTOList) {

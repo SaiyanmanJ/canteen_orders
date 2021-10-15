@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.wj.order.mapper.OrderItemMapper">
+
+    <insert id="insert">
+        insert into order_item (order_id, product_id, count, seller_id)
+        values (#{orderId}, #{product.id}, #{count}, #{sellerId})
+    </insert>
+
+    <delete id="delete">
+        delete
+        from order_item
+        where id = #{orderItemId}
+    </delete>
+
+
+    <update id="update">
+        update order_item
+        set count = #{count}
+        where id = #{id}
+    </update>
+
+    <select id="getOrderItemsByOrderId" resultType="com.wj.order.entity.OrderItem">
+        select *
+        from order_item
+        where order_id = #{orderId}
+    </select>
+    <select id="getOrderItemBySellerId" resultMap="OrderItem">
+        select o.id oid,o.order_id ooid, o.product_id opid,p.id pid, p.name pname, p.price pprice, p.additinal pa, o.count oc
+        from order_item as o,
+             product as p
+        where o.seller_id = #{sellerId} and p.id = o.product_id
+    </select>
+
+    <resultMap id="OrderItem" type="com.wj.order.entity.OrderItem">
+        <id column="oid" property="id"/>
+        <result column="ooid" property="orderId"/>
+
+        <!--   级联属性的封装     -->
+        <result column="pid" property="product.id"/>
+        <result column="pname" property="product.name"/>
+        <result column="pprice" property="product.price"/>
+        <result column="pa" property="product.additinal"/>
+
+        <result column="oc" property="count"/>
+    </resultMap>
+
+</mapper>
+

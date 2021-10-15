@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.wj.order.mapper.OrderMapper">
+
+    <insert id="insert">
+        insert into orders (id, pay_status, price, user_id)
+        values (#{id}, #{payStatus}, #{price}, #{userId})
+    </insert>
+    <delete id="delete">
+        delete from orders where id = #{id}
+    </delete>
+
+    <update id="update">
+        update orders set pay_status = #{payStatus}, price = #{price} where id = #{id}
+    </update>
+
+    <select id="getOrdersByUserId" resultType="com.wj.order.entity.Order">
+        select *
+        from orders
+        where user_id = #{userId}
+    </select>
+    
+    <select id="getOrderById" resultType="com.wj.order.entity.Order">
+        select *
+        from orders
+        where id = #{orderId}
+    </select>
+
+</mapper>
+
