@@ -21,4 +21,6 @@ public class Product {
     private String additinal;
 //  所属窗口
     private Long sellerId;
+//    剩余库存
+    private Long count;
 }

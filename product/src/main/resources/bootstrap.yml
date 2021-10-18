@@ -1,16 +1,25 @@
 spring:
   application:
     name: nacos-product-service
+
   cloud:
     nacos:
       discovery:
         server-addr: localhost:8848
+        namespace: 2b4c9c15-7094-4ed0-aa0a-16751d10e760
+
       config:
         server-addr: localhost:8848 # nacos作为配置中心的地址
         file-extension: yaml # 指定yaml格式的配置
         group: PRODUCT_GROUP # 组名
         namespace: 2b4c9c15-7094-4ed0-aa0a-16751d10e760
         refresh-enabled: true # 支持刷新功能
+    stream:
+      bindings: # 服务的整合处理
+        myMessage: # 这个名字是一个通道的名称 默认就是Exchange的名称
+#          destination: product # 表示要使用的Exchange名称定义
+          group: order # 表示分组 同一组中的服务不会重复消费同一个消息
+          content-type: application/json # 设置消息类型，本次为json，文本则设置“text/plain”
 
   profiles:
     active: dev

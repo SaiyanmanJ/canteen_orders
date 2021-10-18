@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.wj.user.mapper.UserMapper">
+    <insert id="insert">
+        insert into user (name, password, school_id, phone, role)
+        values (#{name}, #{password}, #{schoolId}, #{phone}, #{role})
+    </insert>
+    <delete id="delete">
+        delete from user where id = #{id}
+    </delete>
+
+    <update id="update">
+        update user set name = #{name}, password = #{password}, school_id = #{schoolId}, phone = #{phone}, role = #{role} where id = #{id}
+    </update>
+
+
+
+    <select id="getUserById" resultType="com.wj.user.entity.User">
+        select * from user where id = #{id}
+    </select>
+
+</mapper>
+

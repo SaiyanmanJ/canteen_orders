@@ -57,4 +57,6 @@ public class ProductTest {
         orderItemDTOList.add(new OrderItemDTO(3L, 2, null));
         productService.decrease(orderItemDTOList);
     }
+
+//    测试Spring Cloud Stream + rabbitmq
 }

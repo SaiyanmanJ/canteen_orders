@@ -3,6 +3,7 @@ package com.wj.product.controller;
 import com.wj.commons.CommonResult;
 import com.wj.dto.OrderItemDTO;
 import com.wj.product.entity.Product;
+import com.wj.product.service.MessageService;
 import com.wj.product.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private MessageService messageService;
 
     @GetMapping(value = "/product/getBySeller/{sellerId}")
     public CommonResult getSellerProducts(@PathVariable("sellerId") Long sellerId){
@@ -68,5 +72,12 @@ public class ProductController {
     public CommonResult decreaseProductCount(@RequestBody List<OrderItemDTO> orderItemDTOList){
         productService.decrease(orderItemDTOList);
         return new CommonResult(200, "减库存成功");
+    }
+
+    @GetMapping(value = "/product/mq")
+    public void output(){
+        String msg = "哈哈哈";
+        log.info("product 发送消息: " + msg);
+        messageService.send(msg);
     }
 }

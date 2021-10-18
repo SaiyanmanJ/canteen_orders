@@ -24,4 +24,9 @@ public interface OrderService {
     BigDecimal calTotalPrice(List<OrderItem> orderItems, List<Product> products, Long orderId);
 
     List<OrderItemDTO> getProductInfo(List<OrderItem> orderItems);
+
+    Order getOrderById(Long id);
+
+    // 只能卖家操作
+    Order finished(Long id);
 }

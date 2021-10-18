@@ -8,7 +8,9 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="api-commons" />
+        <module name="api-gateway" />
         <module name="product" />
+        <module name="user" />
         <module name="nacos" />
         <module name="order" />
       </profile>

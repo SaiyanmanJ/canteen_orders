@@ -31,5 +31,5 @@ public interface ProductService {
     List<Product> getProductsByIds(List<Long> ids);
 
     //    减库存
-    void decrease(List<OrderItemDTO> orderItemDTOList);
+    List<Product> decrease(List<OrderItemDTO> orderItemDTOList);
 }

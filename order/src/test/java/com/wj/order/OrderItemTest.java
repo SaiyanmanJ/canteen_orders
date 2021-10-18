@@ -23,7 +23,7 @@ public class OrderItemTest {
     //  增
     @Test
     public void testInsert() {
-        orderItemMapper.insert(new OrderItem(null, 1L, new Product(1L, null, null, null, null), 2, null));
+        orderItemMapper.insert(new OrderItem(null, 1L, new Product(1L, null, null, null, null, null), 2, null));
     }
 
     // 删

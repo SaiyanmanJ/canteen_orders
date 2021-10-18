@@ -5,6 +5,8 @@ import com.wj.dto.OrderItemDTO;
 import com.wj.order.entity.Order;
 import com.wj.order.entity.OrderItem;
 import com.wj.order.entity.Product;
+import com.wj.order.enums.OrderStatusEnum;
+import com.wj.order.exception.OrderException;
 import com.wj.order.mapper.OrderMapper;
 import com.wj.order.service.OrderItemService;
 import com.wj.order.service.OrderService;
@@ -13,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -49,6 +52,7 @@ public class OrderServiceImpl implements OrderService {
      * 4.扣库存(调用商品服务)
      * 5.订单入库
      */
+    @Transactional
     @Override
     public void insert(Order order) {
 
@@ -75,6 +79,10 @@ public class OrderServiceImpl implements OrderService {
 
         orderMapper.insert(order);
         log.info("数据库中创建订单");
+
+        log.info("调用支付微服务"); //没有开发这一部分
+        order.setPayStatus(OrderStatusEnum.PAYED.getCode());
+        orderMapper.update(order);
     }
 
     @Override
@@ -113,5 +121,35 @@ public class OrderServiceImpl implements OrderService {
             orderItemDTOList.add(new OrderItemDTO(orderItem.getProduct().getId(), orderItem.getCount(),null));
         }
         return orderItemDTOList;
+    }
+
+    @Override
+    public Order getOrderById(Long id) {
+        return orderMapper.getOrderById(id);
+    }
+
+    @Transactional
+    @Override
+    public Order finished(Long id) {
+        //1. 查询订单
+        Order order = this.getOrderById(id);
+        if(order == null){
+            log.error("订单 id=" + id + "不存在");
+            throw new OrderException(OrderStatusEnum.NOT_EXIST);
+        }
+        //2. 判断订单状态
+        if(order.getPayStatus() != 1){
+            log.error("订单状态错误：需要为支付状态 1， 当前状态为：" + order.getPayStatus());
+            throw new OrderException(OrderStatusEnum.STATUS_ERROR);
+        }
+        //3. 修改订单状态
+        order.setPayStatus(OrderStatusEnum.FINISH.getCode());
+        log.info("修改订单状态为完结");
+        orderMapper.update(order);
+
+        //4.查询订单详情
+        List<OrderItem> orderItems = orderItemService.getOrderItemsByOrderId(order.getId());
+        order.setOrderItems(orderItems);
+        return order;
     }
 }
