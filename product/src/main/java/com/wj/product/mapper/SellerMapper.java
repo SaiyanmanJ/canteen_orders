@@ -2,6 +2,7 @@ package com.wj.product.mapper;
 
 import com.wj.product.entity.Seller;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -12,5 +13,6 @@ import java.util.List;
 @Mapper
 public interface SellerMapper {
 
-    List<Seller> getByCanteenAndLayerId(Long canteen_id, Long layer);
+    List<Seller> getSellerByCanteenAndLayer(@Param("canteenId") Long canteenId, @Param("layer") Long layer);
+
 }

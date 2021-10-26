@@ -36,7 +36,11 @@ public class ProductController {
     @GetMapping(value = "/product/getById/{id}")
     public CommonResult getProductById(@PathVariable("id") Long id){
         Product product = productService.getProductById(id);
-        log.info("--------根据id查询单个product------------");
+        log.info("根据productId查询单个product" + product);
+
+        if(product == null){
+            return new CommonResult(200, "此商品不存在");
+        }
         return new CommonResult(200, "查询成功", product);
     }
 
@@ -79,5 +83,10 @@ public class ProductController {
         String msg = "哈哈哈";
         log.info("product 发送消息: " + msg);
         messageService.send(msg);
+    }
+
+    @GetMapping(value = "/product/test")
+    public CommonResult test(){
+        return new CommonResult(200, "性能测试");
     }
 }

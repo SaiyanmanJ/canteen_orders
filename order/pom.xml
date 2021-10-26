@@ -85,6 +85,11 @@
             <groupId>org.mybatis.spring.boot</groupId>
             <artifactId>mybatis-spring-boot-starter</artifactId>
         </dependency>
+        <!--    redisson  分布式锁  -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+        </dependency>
         <!--        <dependency>-->
         <!--            <groupId>com.baomidou</groupId>-->
         <!--            <artifactId>mybatis-plus-boot-starter</artifactId>-->
@@ -92,6 +97,12 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+        </dependency>
+        <!--    配置处理器,application.yml会有提示    -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
         </dependency>
         <!--一般基础配置-->
         <dependency>

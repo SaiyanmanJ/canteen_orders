@@ -48,7 +48,6 @@ public class OrderController {
 
     @PostMapping(value = "/order/create")
     public CommonResult create(@RequestBody Order order){
-
         log.info("订单传入：" + order);
         orderService.insert(order);
         return new CommonResult(200, "订单创建成功");

@@ -32,4 +32,7 @@ public interface ProductService {
 
     //    减库存
     List<Product> decrease(List<OrderItemDTO> orderItemDTOList);
+
+    //查食堂一层的窗口的商品展示在前端
+    
 }

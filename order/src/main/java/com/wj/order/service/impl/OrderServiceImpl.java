@@ -52,39 +52,75 @@ public class OrderServiceImpl implements OrderService {
      * 4.扣库存(调用商品服务)
      * 5.订单入库
      */
+//    @Transactional
+//    @Override
+//    public void insert(Order order) {
+//
+//        //        生成id 注意使用getSnowflake()不要用createSnowflake()
+//        Long orderId = IdUtil.getSnowflake(1L, 1L).nextId();
+//
+//        log.info("生成订单id: " + orderId);
+//        order.setId(orderId);
+//        log.info("订单支付状态设置为： 0 表示未支付");
+//        order.setPayStatus(0);
+//
+//        List<OrderItem> orderItems = order.getOrderItems();
+//        log.info("订单项： " + orderItems);
+//        Long start = System.currentTimeMillis();
+//        log.info("调用product的时间:" + start);
+//        List<Product> products = productService.getProductsByIds(orderItemService.getProductsIds(orderItems));
+//        log.info("商品信息： " + products);
+//
+//
+//        BigDecimal totalPrice = calTotalPrice(orderItems, products, orderId);
+//        log.info("订单总价格： " + totalPrice);
+//        order.setPrice(totalPrice);
+//
+//        log.info("减库存");
+//        productService.decrease(getProductInfo(orderItems));
+//
+//        log.info("数据库中创建订单");
+//        orderMapper.insert(order);
+//
+//        //设置订单为已支付
+//        order.setPayStatus(OrderStatusEnum.PAYED.getCode());
+//        orderMapper.update(order);
+//    }
+
     @Transactional
     @Override
     public void insert(Order order) {
 
         //        生成id 注意使用getSnowflake()不要用createSnowflake()
         Long orderId = IdUtil.getSnowflake(1L, 1L).nextId();
-        order.setId(orderId);
-        log.info("生成订单id: " + orderId);
 
-        order.setPayStatus(0);
+        log.info("生成订单id: " + orderId);
+        order.setId(orderId);
         log.info("订单支付状态设置为： 0 表示未支付");
+        order.setPayStatus(0);
 
         List<OrderItem> orderItems = order.getOrderItems();
         log.info("订单项： " + orderItems);
+        Long start = System.currentTimeMillis();
+        log.info("调用product的时间:" + start);
         List<Product> products = productService.getProductsByIds(orderItemService.getProductsIds(orderItems));
         log.info("商品信息： " + products);
 
 
         BigDecimal totalPrice = calTotalPrice(orderItems, products, orderId);
-        order.setPrice(totalPrice);
         log.info("订单总价格： " + totalPrice);
+        order.setPrice(totalPrice);
 
-        productService.decrease(getProductInfo(orderItems));
         log.info("减库存");
+        productService.decrease(getProductInfo(orderItems));
 
-        orderMapper.insert(order);
         log.info("数据库中创建订单");
+        orderMapper.insert(order);
 
-        log.info("调用支付微服务"); //没有开发这一部分
+        //设置订单为已支付
         order.setPayStatus(OrderStatusEnum.PAYED.getCode());
         orderMapper.update(order);
     }
-
     @Override
     public void delete(Long orderId) {
         orderMapper.delete(orderId);

@@ -1,5 +1,5 @@
 server:
-  port: 8001
+  port: 8200
 
 spring:
   main:
@@ -18,3 +18,8 @@ management:
 ##消费者将要去访问的微服务名称(注册成功进nacos的微服务提供者)
 #service-url:
 #  nacos-user-service: http://nacos-product-service
+project:
+  thread:
+    core-size: 20
+    max-size: 200
+    keep-alive-time: 10

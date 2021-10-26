@@ -34,6 +34,7 @@
         <hutool.version>5.7.14</hutool.version>
         <bootstrap.version>3.0.2</bootstrap.version>
         <zipkin.version>2.2.8.RELEASE</zipkin.version>
+        <redisson.version>3.16.3</redisson.version>
     </properties>
 
     <!-- 子模块继承之后，提供作用：锁定版本 + 子modlue不用写groupId和version  -->
@@ -90,6 +91,13 @@
             <!--                <artifactId>mybatis-plus-boot-starter</artifactId>-->
             <!--                <version>${mybatisplus.spring.boot.version}</version>-->
             <!--            </dependency>-->
+            <!--     redisson       -->
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson-spring-boot-starter</artifactId>
+                <version>${redisson.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
