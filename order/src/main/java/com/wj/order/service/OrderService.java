@@ -7,6 +7,7 @@ import com.wj.order.entity.Product;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author Wang Jing
@@ -21,7 +22,7 @@ public interface OrderService {
 
     void update(Order order);
 
-    BigDecimal calTotalPrice(List<OrderItem> orderItems, List<Product> products, Long orderId);
+    BigDecimal calTotalPrice(List<OrderItem> orderItems, List<Product> products);
 
     List<OrderItemDTO> getProductInfo(List<OrderItem> orderItems);
 

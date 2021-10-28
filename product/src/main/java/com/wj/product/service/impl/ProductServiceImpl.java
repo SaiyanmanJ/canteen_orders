@@ -74,7 +74,6 @@ public class ProductServiceImpl implements ProductService {
     // 查询商品的 1635252117252 1635252117518  518-252  266 耗时 (并发调用)
     @Override
     public List<Product> getProductsByIds(List<Long> ids) {
-        log.info("被调用的时间：" + System.currentTimeMillis());
         Long baseTime = 30L;
 
         List<Product> products = new ArrayList<>();
@@ -113,7 +112,7 @@ public class ProductServiceImpl implements ProductService {
     public List<Product> decrease(List<OrderItemDTO> orderItemDTOList) {
         //            发送MQ消息 要整体发送订单项中商品扣完后的商品信息，这样如果中间报错，直接不发送
         List<Product> products = decreaseProcess(orderItemDTOList);
-        log.info("nacos-product-service 发送到 mq ：" + products);
+        log.debug("nacos-product-service 发送到 mq ：{}", products);
         streamClient.output().send(MessageBuilder.withPayload(products).build());
         return products;
     }
@@ -150,11 +149,13 @@ public class ProductServiceImpl implements ProductService {
     //加入redis
     @Transactional  //加上事务
     public List<Product> decreaseProcess(List<OrderItemDTO> orderItemDTOList){
+        log.info("开始减库存");
         List<Product> products = new ArrayList<>();
         for(OrderItemDTO orderItemDTO: orderItemDTOList){
 //            判断商品是否存在
             String productJSON = redisTemplate.opsForValue().get("product" + orderItemDTO.getId());
             if(StringUtils.isEmpty(productJSON)){ //从redis中查询，由于刚刚写入redis，所以redis中应该存在该菜品，如果不存在就报不存在的异常
+                log.error("redis中没有该菜品！！");
                 throw new ProductException(ProductStatusEnum.PRODUCT_NOT_EXIST);
             }
 
@@ -162,14 +163,14 @@ public class ProductServiceImpl implements ProductService {
             Product product = JSONUtil.toBean(productJSON, Product.class);
             int result = product.getCount() - orderItemDTO.getCount();
             if(result < 0){ //不够减, redis要恢复原状 需要用redisson
+                log.error("不够减！");
                 throw new ProductException(ProductStatusEnum.PRODUCT_COUNT_NOT_ENOUGH);
             }
 //            更新商品库存
             product.setCount(result);
             //不能删除缓存，可能会有其它订单用到这个product，删除了就需要查数据库了，所以如果出问题，需要回滚，使用redisson
-            redisTemplate.opsForValue().set("product" + product.getId(), productJSON, 30, TimeUnit.SECONDS);//更新redis中的缓存数值
+            redisTemplate.opsForValue().getAndSet("product" + product.getId(), JSONUtil.toJsonStr(product));//更新redis中的缓存数值
             update(product); //更新数据库
-
 //            保存到list中
             products.add(product);
 
@@ -178,7 +179,7 @@ public class ProductServiceImpl implements ProductService {
 //            messageService.send(product);
 //            streamClient.output().send(MessageBuilder.withPayload(product).build());
         }
-
+        log.info("减库存成功");
         return products;
     }
 

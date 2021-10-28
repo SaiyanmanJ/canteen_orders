@@ -48,14 +48,14 @@ public class OrderController {
 
     @PostMapping(value = "/order/create")
     public CommonResult create(@RequestBody Order order){
-        log.info("订单传入：" + order);
+        log.debug("订单传入：" + order);
         orderService.insert(order);
         return new CommonResult(200, "订单创建成功");
     }
 
     @PostMapping(value = "/order/finish/{id}")
     public CommonResult finished(@PathVariable("id") Long id){
-        log.info("订单id: " + id);
+        log.debug("订单id: " + id);
         Order order = orderService.finished(id);
         return new CommonResult(200, "订单已完成, 菜品已完成", order);
     }

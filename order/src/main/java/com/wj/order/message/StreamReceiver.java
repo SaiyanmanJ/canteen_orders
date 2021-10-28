@@ -27,10 +27,10 @@ public class StreamReceiver {
     @StreamListener(StreamClient.INPUT)
 //    @SendTo(StreamClient.INPUT) //处理完毕的反馈 发送到另一个队列
     public void process(List<Product> products) {
-        log.info("StreamReceiver: {}", products);
+        log.debug("StreamReceiver: {}", products);
 //        存到 商品 id和库存 到redis中
-        products.forEach(product -> {
-            redisTemplate.opsForValue().set(String.format(PRODUCT_STOCK_TEMPLATE, product.getId()), String.valueOf(product.getCount()));
-        });
+//        products.forEach(product -> {
+//            redisTemplate.opsForValue().set(String.format(PRODUCT_STOCK_TEMPLATE, product.getId()), String.valueOf(product.getCount()));
+//        });
     }
 }

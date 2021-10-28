@@ -12,7 +12,11 @@ public enum OrderStatusEnum {
     PAYED(1, "已支付"),
     FINISH(2, "完结"),
     NOT_EXIST(4,"订单不存在"),
-    STATUS_ERROR(5, "订单状态错误");
+    STATUS_ERROR(5, "订单状态错误"),
+    ORDER_ITEM_IS_NULL(6, "订单项为空"),
+    PAYED_DEFEATED(7, "支付失败"),
+    DECREASE_FAIL(8,"减库存失败"),
+    CALCULATE_TOTAL_PRICE_ERROR(9, "计算价格错误：订单项与产品id不对应");
     private Integer code;
 
     private String message;

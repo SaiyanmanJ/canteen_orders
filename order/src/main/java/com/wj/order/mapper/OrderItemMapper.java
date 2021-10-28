@@ -16,6 +16,8 @@ public interface OrderItemMapper {
 
     void insert(OrderItem orderItem);
 
+    void insertList(List<OrderItem> orderItems);
+
     void delete(Long orderItemId);
 
     void update(OrderItem orderItem);

@@ -1,5 +1,6 @@
 package com.wj.order.service.impl;
 
+import com.wj.dto.OrderItemDTO;
 import com.wj.order.entity.OrderItem;
 import com.wj.order.entity.Product;
 import com.wj.order.mapper.OrderItemMapper;
@@ -33,6 +34,15 @@ public class OrderItemServiceImpl implements OrderItemService {
     }
 
     @Override
+    public List<OrderItemDTO> getOrderItemDTO(List<OrderItem> orderItems) {
+        List<OrderItemDTO> orderItemDTOS = new ArrayList<>(orderItems.size());
+        for (OrderItem orderItem: orderItems) {
+            orderItemDTOS.add(new OrderItemDTO(orderItem.getOrderId(), orderItem.getCount(), orderItem.getProduct().getPrice()));
+        }
+        return orderItemDTOS;
+    }
+
+    @Override
     public List<OrderItem> getOrderItemsByOrderId(Long orderItemId) {
         return orderItemMapper.getOrderItemsByOrderId(orderItemId);
     }
@@ -41,6 +51,11 @@ public class OrderItemServiceImpl implements OrderItemService {
     public void insert(OrderItem orderItem) {
         log.info("insert: " + orderItem);
         orderItemMapper.insert(orderItem);
+    }
+
+    @Override
+    public void insertList(List<OrderItem> orderItems) {
+        orderItemMapper.insertList(orderItems);
     }
 
     @Override

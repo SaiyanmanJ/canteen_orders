@@ -20,6 +20,10 @@ management:
 #  nacos-user-service: http://nacos-product-service
 project:
   thread:
-    core-size: 20
+    core-size: 16
     max-size: 200
     keep-alive-time: 10
+
+logging:
+  level:
+    root: info
