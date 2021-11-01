@@ -1,21 +1,29 @@
 package com.wj.order.thread;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
+import cn.hutool.core.util.IdUtil;
+import com.wj.order.entity.Order;
+import com.wj.order.entity.OrderItem;
+import com.wj.order.enums.OrderStatusEnum;
+import com.wj.order.exception.OrderException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+import java.util.concurrent.*;
 
 /**
  * @author Wang Jing
  * @time 2021/10/26 21:12
  */
+@Slf4j
 public class ThreadTest {
+
+    @Autowired
+    private ThreadPoolExecutor executor;
+
     public static void main(String[] args) throws ExecutionException, InterruptedException {
-        System.out.println("main开始");
-        FutureTask<Integer> futureTask = new FutureTask<>(new Callable01());
-        new Thread(futureTask).start();
-        Integer ans = futureTask.get();
-        System.out.println("ans====" + ans);
-        System.out.println("main结束");
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        log.info("可用处理器数量：{}",availableProcessors);
     }
 
     //1.继承 Thread  调用方式 new Thread01().start()
@@ -50,5 +58,40 @@ public class ThreadTest {
     }
 
     //4.线程池
+
+
+    //5.
+
+    public void test(Order order){
+        log.info("开始创建订单");
+        //获得订单项
+        List<OrderItem> orderItems = order.getOrderItems();
+        if (orderItems.size() == 0) {
+            log.info("订单项为空！！");
+            throw new OrderException(OrderStatusEnum.ORDER_ITEM_IS_NULL);
+        }
+
+        //异步 生成订单id，并设置未支付
+        final CompletableFuture<Long> orderIdFuture = CompletableFuture.supplyAsync(() -> {
+            //生成id 注意使用getSnowflake()不要用createSnowflake()
+            Long orderId = IdUtil.getSnowflake(1L, 1L).nextId();
+            log.info("处理订单id，订单项id");
+            order.setId(orderId);
+            order.setPayStatus(0); //默认未支付
+            log.info("设置订单项的订单id");
+            for (OrderItem orderItem : orderItems) {
+                orderItem.setOrderId(orderId);
+                orderItem.setId(IdUtil.getSnowflake(1L, 2L).nextId());
+            }
+            return orderId;
+        }, executor);
+
+        try {
+            Long id = orderIdFuture.get();
+            log.info("id: {}", id);
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
 
 }

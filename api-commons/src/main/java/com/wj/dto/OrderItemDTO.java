@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 public class OrderItemDTO {
     private Long id; //产品id
 
-    private Integer count; //购买数量
+    private Long count; //购买数量
 
     private BigDecimal price; //产品价格
 }

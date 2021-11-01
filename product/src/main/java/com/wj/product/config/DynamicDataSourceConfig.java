@@ -1,5 +1,6 @@
 package com.wj.product.config;
 
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -24,6 +25,6 @@ public class DynamicDataSourceConfig {
     @RefreshScope //此bean支持动态刷新
     public DataSource dataSource() {
         log.info("创建新的数据源");
-        return  DataSourceBuilder.create().build();
+        return  DataSourceBuilder.create().type(HikariDataSource.class).build();
     }
 }

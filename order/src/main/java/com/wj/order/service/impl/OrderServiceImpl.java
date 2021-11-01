@@ -1,6 +1,8 @@
 package com.wj.order.service.impl;
 
 import cn.hutool.core.util.IdUtil;
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import com.wj.commons.CommonResult;
 import com.wj.dto.OrderItemDTO;
 import com.wj.order.entity.Order;
 import com.wj.order.entity.OrderItem;
@@ -26,6 +28,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * @author Wang Jing
@@ -64,137 +68,124 @@ public class OrderServiceImpl implements OrderService {
      */
 //    @Transactional
 //    @Override
-//    public void insert(Order order) {
-//
+//    public Order insert(Order order) {
+//        log.info("开始创建订单");
 //        //        生成id 注意使用getSnowflake()不要用createSnowflake()
 //        Long orderId = IdUtil.getSnowflake(1L, 1L).nextId();
 //
-//        log.info("生成订单id: " + orderId);
+//        log.debug("生成订单id: " + orderId);
 //        order.setId(orderId);
-//        log.info("订单支付状态设置为： 0 表示未支付");
+//        log.debug("订单支付状态设置为： 0 表示未支付");
 //        order.setPayStatus(0);
 //
 //        List<OrderItem> orderItems = order.getOrderItems();
-//        log.info("订单项： " + orderItems);
-//        Long start = System.currentTimeMillis();
-//        log.info("调用product的时间:" + start);
+//        //设置订单项ID
+//        for(OrderItem orderItem: orderItems){
+//            orderItem.setOrderId(orderId);
+//            orderItem.setId(IdUtil.getSnowflake(1L, 2L).nextId());
+//        }
+//        log.debug("订单项： " + orderItems);
 //        List<Product> products = productService.getProductsByIds(orderItemService.getProductsIds(orderItems));
-//        log.info("商品信息： " + products);
+//        log.debug("商品信息： " + products);
 //
-//
-//        BigDecimal totalPrice = calTotalPrice(orderItems, products, orderId);
-//        log.info("订单总价格： " + totalPrice);
+//        BigDecimal totalPrice = calTotalPrice(orderItems, products);
+//        log.debug("订单总价格： " + totalPrice);
 //        order.setPrice(totalPrice);
 //
-//        log.info("减库存");
+//        log.debug("减库存");
 //        productService.decrease(getProductInfo(orderItems));
 //
-//        log.info("数据库中创建订单");
+//        log.debug("插入订单项");
+//        orderItemService.insertList(orderItems);
+//        log.debug("数据库中创建订单");
 //        orderMapper.insert(order);
 //
+//        //调用支付，假设成功
 //        //设置订单为已支付
 //        order.setPayStatus(OrderStatusEnum.PAYED.getCode());
 //        orderMapper.update(order);
+//        log.info("创建订单结束");
+//        return order;
 //    }
     @Transactional
     @Override
-    public void insert(Order order) {
+    public Order insert(Order order) {
         //异步编排流程
         log.info("开始创建订单");
         //获得订单项
-
         List<OrderItem> orderItems = order.getOrderItems();
-        if(orderItems.size() == 0){
+        if (orderItems.size() == 0) {
             log.error("订单项为空！！");
             throw new OrderException(OrderStatusEnum.ORDER_ITEM_IS_NULL);
         }
-
-        //异步 生成订单id，并设置未支付
-        final CompletableFuture<Long> orderIdFuture = CompletableFuture.supplyAsync(() -> {
-            //生成id 注意使用getSnowflake()不要用createSnowflake()
-            Long orderId = IdUtil.getSnowflake(1L, 1L).nextId();
-            log.debug("生成订单id: " + orderId);
-            order.setId(orderId);
-            log.debug("设置订单项的订单id");
-            for(OrderItem orderItem: orderItems){
-                orderItem.setOrderId(orderId);
-            }
-            return orderId;
-        }, executor);
-
-        //异步获取 商品项的product id
-//        final CompletableFuture<List<Long>> productIdsFuture = CompletableFuture.supplyAsync(() -> {
-//            log.debug("获取订单商品的 id");
-//            return orderItemService.getProductsIds(orderItems);
-//        }, executor);
-
-//        //异步获取 构建 orderItemDTO 用来减库存
-//        final CompletableFuture<List<OrderItemDTO>> orderItemDTOFuture = CompletableFuture.supplyAsync(() -> {
-//            log.info("构建orderItemDTO");
-//            return getProductInfo(orderItems);
-//        }, executor);
-
-        //查询商品信息 需要在获取product id之后执行
+        //异步查询商品信息
         final CompletableFuture<List<Product>> productsFuture = CompletableFuture.supplyAsync(() -> {
-            log.debug("获取订单商品的 id");
+            log.info("查询商品信息");
             List<Long> ids = orderItemService.getProductsIds(orderItems);
-            List<Product> products = productService.getProductsByIds(ids);
-            log.debug("商品信息：{} ", products);
-            return products;
-        });
+            return productService.getProductsByIds(ids); //返回product
+        }, executor);
 
         //查询完商品后,没问题，异步减库存
-        final CompletableFuture<Boolean> decreaseFuture = productsFuture.thenApplyAsync((products) -> {
-            log.debug("预减库存");
-            productService.decrease(getProductInfo(orderItems));
-            return true;
-        }, executor);
+        final CompletableFuture<BigDecimal> decreaseFuture = productsFuture.thenApplyAsync((products) -> {
 
-        //查询完商品后, 异步计算总价
-        final CompletableFuture<BigDecimal> priceFuture = productsFuture.thenApplyAsync((products) -> {
+            log.info("减库存");
+            productService.decrease(getProductInfo(orderItems));
+            //生成id 注意使用getSnowflake()不要用createSnowflake()
+            Long orderId = IdUtil.getSnowflake(1L, 1L).nextId();
+            log.info("处理订单id，订单项id");
+            order.setId(orderId);
+            order.setPayStatus(0); //默认未支付
+            for (OrderItem orderItem : orderItems) {
+                orderItem.setOrderId(orderId);
+                orderItem.setId(IdUtil.getSnowflake(1L, 2L).nextId());
+            }
+            log.info("计算订单价格");
             BigDecimal totalPrice = calTotalPrice(orderItems, products);
-            log.debug("订单总价格：{}", totalPrice);
             order.setPrice(totalPrice);
             return totalPrice;
         }, executor);
 
-        //减库存完成, 总价计算完成, 异步创建订单
-        final CompletableFuture<Void> createOrderFuture = decreaseFuture.thenAcceptBothAsync(priceFuture, (decreaseStatus, totalPrice) -> {
-            log.debug("数据库中创建订单");
-            order.setPayStatus(1); //默认支付成功
-            orderMapper.insert(order);
-        }, executor);
-
-        //减库存完成, 总价计算完成, 异步创建订单项
-        final CompletableFuture<Void> createOrderItemFuture = decreaseFuture.thenAcceptBothAsync(priceFuture, (decreaseStatus, totalPrice) -> {
-            log.debug("数据库中创建订单项");
+        //减库存完成, 总价计算完成, 异步创建订单项  个人认为，只要减库存成功，插入订单项必须成功，如果有异常也得成功
+        final CompletableFuture<Boolean> createOrderItemFuture = decreaseFuture.thenApplyAsync((totalPrice) -> {
+            log.info("插入订单项 {}", orderItems);
             orderItemService.insertList(orderItems);
+            return true;
         }, executor);
 
-        //减库存完成, 总价计算完成, 异步调用付款
-        final CompletableFuture<Void> payFuture = decreaseFuture.thenAcceptBothAsync(priceFuture, (decreaseStatus, totalPrice) -> {
-            // 调用支付
-            boolean payStatus = true;
-            log.debug("调用支付");
-            // 调用支付 参数是totalPrice, 用户账号
-            if (payStatus == false) {
-                log.error("支付失败");
-                order.setPayStatus(0);
-                //数据库中是否存在该订单, 不存在要等到它插完
-                while(orderMapper.getOrderById(order.getId()) == null){
-                    try {
-                        Thread.sleep(300); //每隔300毫秒查询一次
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+        //减库存完成, 总价计算完成, 异步创建订单
+        final CompletableFuture<BigDecimal> createOrderFuture = decreaseFuture.thenApplyAsync((totalPrice) -> {
+            log.debug("插入订单");
+            orderMapper.insert(order);
+            return totalPrice;
+        }, executor).whenComplete(new BiConsumer<BigDecimal, Throwable>() {
+            //插入订单完成后，调用支付
+            @Override
+            public void accept(BigDecimal totalPrice, Throwable throwable) {
+                // 调用支付
+                boolean payStatus = false;
+                log.info("调用支付");
+                payStatus = true;
+                // 调用支付 参数是totalPrice, 用户账号
+                if (payStatus) {
+                    order.setPayStatus(1); //支付成功
+                    orderMapper.update(order); //更新
+                    //通知商家
+                } else {
+                    log.error("支付失败");
+                    //加入待支付消息队列
                 }
-                //更新订单状态为 未支付
-                orderMapper.update(order);
-            }else{
-                // mq通知商家
             }
         });
-        log.info("创建订单成功");
+
+        try {
+            //等待完成
+            CompletableFuture.allOf(createOrderFuture, createOrderItemFuture).get();
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        log.info("创建订单结束");
+
+        return order;
     }
 
     @Override
@@ -218,12 +209,10 @@ public class OrderServiceImpl implements OrderService {
             // 订单项中的商品id和查到的商品id一致
             if (product.getId().equals(product1.getId())) {
                 bigDecimal = bigDecimal.add(product.getPrice().multiply(BigDecimal.valueOf(orderItem.getCount())));
-            }else {
+                orderItem.setProduct(product); //放入订单项
+            } else {
                 throw new OrderException(OrderStatusEnum.CALCULATE_TOTAL_PRICE_ERROR);
             }
-            //更新orderItem金钱
-//            orderItem.setOrderId(orderId);
-//            orderItemService.insert(orderItem);
         }
         return bigDecimal;
     }

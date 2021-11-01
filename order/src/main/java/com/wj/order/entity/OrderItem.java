@@ -20,7 +20,7 @@ public class OrderItem {
 //    产品 前台只传id，而后台根据id查product信息
     private Product product;
 //    数量
-    private Integer count;
+    private Long count;
 //    卖家
-    private Integer sellerId;
+    private Long sellerId;
 }

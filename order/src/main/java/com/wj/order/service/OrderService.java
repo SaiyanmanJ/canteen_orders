@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutionException;
 public interface OrderService {
     List<Order> getOrdersByUserId(Long userId);
 
-    void insert(Order order);
+    Order insert(Order order);
 
     void delete(Long orderId);
 

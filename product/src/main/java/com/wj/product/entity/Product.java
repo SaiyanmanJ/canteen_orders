@@ -22,5 +22,5 @@ public class Product {
 //  所属窗口
     private Long sellerId;
 //    数量
-    private Integer count;
+    private Long count;
 }

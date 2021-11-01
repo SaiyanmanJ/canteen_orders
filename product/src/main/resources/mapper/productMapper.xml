@@ -15,6 +15,14 @@
         update product set name = #{name}, price = #{price}, additinal = #{additinal}, count = #{count} where id = #{id}
     </update>
 
+    <update id="updateById">
+        update product set count = #{count} where id = #{id}
+    </update>
+    <update id="updateByMap" flushCache="true">
+        <foreach collection="list" item="item" separator=";" open="" close="">
+            update product set count = count - #{item.count} where id = #{item.id}
+        </foreach>
+    </update>
     <select id="getProductsBySellerId" resultType="com.wj.product.entity.Product">
         select *
         from product

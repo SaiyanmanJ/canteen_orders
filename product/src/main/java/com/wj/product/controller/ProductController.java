@@ -85,8 +85,9 @@ public class ProductController {
         messageService.send(msg);
     }
 
-    @GetMapping(value = "/product/test")
+    @GetMapping(value = "/product/redistest")
     public CommonResult test(){
+        productService.redisTest();
         return new CommonResult(200, "性能测试");
     }
 }

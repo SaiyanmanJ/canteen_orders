@@ -49,8 +49,14 @@ public class OrderController {
     @PostMapping(value = "/order/create")
     public CommonResult create(@RequestBody Order order){
         log.debug("订单传入：" + order);
-        orderService.insert(order);
-        return new CommonResult(200, "订单创建成功");
+        Order order2 = orderService.insert(order);
+        if(order2 == null){
+            return new CommonResult(200, "等待订单创建", order2);
+        }
+        if(order2.getPayStatus() == null){
+            return new CommonResult(200, "订单已创建, 待支付", order2);
+        }
+        return new CommonResult(200, "订单已创建, 支付成功", order2);
     }
 
     @PostMapping(value = "/order/finish/{id}")

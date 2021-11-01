@@ -10,6 +10,14 @@ mybatis:
   mapper-locations: classpath:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
+
 logging:
   level:
     root: info
+
+project:
+  thread:
+    core-size: 22
+    max-size: 22
+    keep-alive-time: 30
+

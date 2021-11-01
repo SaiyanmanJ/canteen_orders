@@ -1,6 +1,7 @@
 package com.wj.product;
 
 
+import com.google.common.io.BaseEncoding;
 import com.wj.dto.OrderItemDTO;
 import com.wj.product.entity.Product;
 import com.wj.product.mapper.ProductMapper;
@@ -23,7 +24,7 @@ public class ProductTest {
 //    增
     @Test
     public void testInsert(){
-        productMapper.insert(new Product(null, "蛋挞", new BigDecimal(1.0), "可加热", 1L, 0));
+        productMapper.insert(new Product(null, "蛋挞", new BigDecimal(1.0), "可加热", 1L, 0L));
     }
 // 删
     @Test
@@ -33,7 +34,7 @@ public class ProductTest {
 //    改
     @Test
     public void update(){
-        productMapper.update(new Product(3L, "山西肉夹馍", new BigDecimal(5.0), "可加肉", null, 0));
+        productMapper.update(new Product(3L, "山西肉夹馍", new BigDecimal(5.0), "可加肉", null, 0L));
     }
 //    根据窗口id查
     @Test
@@ -52,10 +53,9 @@ public class ProductTest {
     @Test
     public void testDecrease(){
         List<OrderItemDTO> orderItemDTOList = new ArrayList<>();
-        orderItemDTOList.add(new OrderItemDTO(1L, 2, null));
-        orderItemDTOList.add(new OrderItemDTO(2L, 2, null));
-        orderItemDTOList.add(new OrderItemDTO(3L, 2, null));
-        productService.decrease(orderItemDTOList);
+        orderItemDTOList.add(new OrderItemDTO(1L, 2L, new BigDecimal(0.0)));
+        orderItemDTOList.add(new OrderItemDTO(1L, 2L, new BigDecimal(0.0)));
+        productService.updateByMap(orderItemDTOList);
     }
 
 //    测试Spring Cloud Stream + rabbitmq

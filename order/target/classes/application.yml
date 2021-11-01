@@ -4,10 +4,12 @@ server:
 spring:
   main:
     allow-bean-definition-overriding: true
+
 mybatis:
   mapper-locations: classpath:mapper/*.xml # mappler.xml文件路径
   configuration:
     map-underscore-to-camel-case: true # 开启下划线到驼峰命名的映射
+#    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
 
 management:
   endpoints:
@@ -20,9 +22,9 @@ management:
 #  nacos-user-service: http://nacos-product-service
 project:
   thread:
-    core-size: 16
-    max-size: 200
-    keep-alive-time: 10
+    core-size: 22
+    max-size: 22
+    keep-alive-time: 30
 
 logging:
   level:

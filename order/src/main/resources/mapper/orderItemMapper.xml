@@ -4,15 +4,13 @@
 <mapper namespace="com.wj.order.mapper.OrderItemMapper">
 
     <insert id="insert">
-        insert into order_item (order_id, product_id, count, seller_id)
-        values (#{orderId}, #{product.id}, #{count}, #{sellerId})
+        insert into order_item (id, order_id, product_id, count, seller_id)
+        values (#{id}, #{orderId}, #{product.id}, #{count}, #{sellerId})
     </insert>
     <!--  批量插入  -->
     <insert id="insertList">
-        insert into order_item (order_id, product_id, count, seller_id)
-        values
-        <foreach collection="list" separator="," item="item">
-            (#{item.orderId}, #{item.product.id}, #{item.count}, #{item.sellerId})
+        <foreach collection="list" separator=";" item="item">
+            insert into order_item (id, order_id, product_id, count, seller_id) values (#{item.id},#{item.orderId}, #{item.product.id}, #{item.count}, #{item.sellerId})
         </foreach>
     </insert>
 
