@@ -19,9 +19,9 @@ public class User {
     // 密码
     private String password;
     // 学校id
-    private Long schoolId;
+    private School school;
     // 手机号码
     private String phone;
     // 角色 1 是学生 2 是食堂的窗口员工 3是学校其它员工 4 是外来人员
-    private Integer role;
+    private String role;
 }

@@ -1,5 +1,6 @@
 package com.wj.gateway.filter;
 
+import com.wj.enums.RoleEmum;
 import com.wj.gateway.utils.CookieUtil;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -20,7 +21,7 @@ import reactor.core.publisher.Mono;
 import java.net.URI;
 
 /**
- * 权限校验 区分买家和卖家
+ * 权限校验 访问网址的权限
  * @author Wang Jing
  * @time 2021/10/17 12:29
  */
@@ -42,39 +43,54 @@ public class AuthFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         /**
-         * /order/create/ 只能买家访问 cookie 中有id
-         * /order/finish 只能卖家访问  cookie 中有 token， 并且redis中存有值
-         * /product/list 都可访问
+         * /order/create/ 只能所有用户角色都能访问，但是需要登录状态验证
+         * /order/finish 只能食堂工作人员访问，需要验证角色，和登录状态
+         * /product/canteenId/{cid}/layer/{lno} 根据食堂id，层id 所有人都可访问
          */
-//        log.info("权限校验");
-//        URI uri = exchange.getRequest().getURI();
-//        log.info("uri path: " + uri.getPath());
-//        if("/nacos-order-service/order/create".equals(uri.getPath())){
-//            log.info("访问 /order/create");
-//
-//            HttpCookie cookie = CookieUtil.get(exchange, "userId");
-//
-//            // 买家没登录
-//            if(cookie == null){
-//                log.error("买家未登录");
-//                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-//                return exchange.getResponse().setComplete();
-//            }else{
-//                log.info("cookie{userId=" + cookie.getValue() + "}");
-//            }
-//        }
-//        if("/nacos-order-service/order/finish".equals(uri.getPath())){
-//            log.info("访问 /order/finish");
-//            HttpCookie cookie = CookieUtil.get(exchange, "token");
-//            // 卖家没登录
-//            if(cookie == null || StringUtils.isEmpty(redisTemplate.opsForValue().get(String.format("token_%s", cookie.getValue())))){
-//                log.info("卖家未登录");
-//                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-//                return exchange.getResponse().setComplete();
-//            }else {
-//                log.info("cookie{token=" + cookie.getValue() + "}");
-//            }
-//        }
+        log.info("权限校验");
+        URI uri = exchange.getRequest().getURI();
+        log.info("uri path: " + uri.getPath());
+        HttpCookie cookie = CookieUtil.get(exchange, "token");
+
+        //验证身份 学生1 食堂工作人员2 学校其它工作人员3 校外人员4
+        if("/nacos-order-service/order/create".equals(uri.getPath())){
+            log.info("访问 /order/create");
+            //谁都可以下订单，前提是已经登录过了
+            // 卖家没登录
+            if(cookie == null || StringUtils.isEmpty(redisTemplate.opsForValue().get(String.format("token_%s", cookie.getValue())))){
+                log.info("用户未登录！");
+                //跳到登录页面
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
+        }
+
+        //只有食堂工作人员才能完成订单
+        if("/nacos-order-service/order/finish".equals(uri.getPath())){
+            log.info("访问 /order/finish");
+            String token;
+
+            if(cookie == null){
+                log.info("用户未登录！");
+                //跳到登录页面, 没写，暂时返回401
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }else{
+                token = redisTemplate.opsForValue().get(String.format("token_%s", cookie.getValue()));
+                if(StringUtils.isEmpty(token)){
+                    log.info("用户未登录！");
+                    //跳到登录页面
+                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                    return exchange.getResponse().setComplete();
+                }
+            }
+
+            if(token.charAt(0) != RoleEmum.IN_SCHOOL_CARTEEN_STUFF.getRoleId()){
+                //用户权限错误
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
+        }
         return chain.filter(exchange);
     }
 

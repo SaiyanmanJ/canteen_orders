@@ -40,9 +40,6 @@ import java.util.function.Function;
 @Slf4j
 public class ProductServiceImpl implements ProductService {
 
-    //库存缓存
-    private static Map<Long, Long> stock = new ConcurrentHashMap<>();
-
     @Autowired
     private ProductMapper productMapper;
 

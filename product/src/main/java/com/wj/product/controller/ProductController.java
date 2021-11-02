@@ -3,8 +3,10 @@ package com.wj.product.controller;
 import com.wj.commons.CommonResult;
 import com.wj.dto.OrderItemDTO;
 import com.wj.product.entity.Product;
+import com.wj.product.entity.Seller;
 import com.wj.product.service.MessageService;
 import com.wj.product.service.ProductService;
+import com.wj.product.service.SellerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,17 @@ public class ProductController {
 
     @Autowired
     private MessageService messageService;
+
+    @Autowired
+    private SellerService service;
+
+    //得到某个食堂的某层的商品，按照窗口
+    @GetMapping(value = "/product/canteenId/{cid}/layer/{lno}")
+    public CommonResult getSellerProductsByCanteenIdAndLayer(@PathVariable("cid") Long canteenId, @PathVariable("lno") Long layer){
+        log.info("查询SellerProducts: canteenId =" + canteenId + ", layer = " + layer);
+        List<Seller> sellers = service.getSellerByCanteenAndLayer(canteenId, layer);
+        return new CommonResult(200, "查询成功", sellers);
+    }
 
     @GetMapping(value = "/product/getBySeller/{sellerId}")
     public CommonResult getSellerProducts(@PathVariable("sellerId") Long sellerId){

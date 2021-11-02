@@ -36,4 +36,8 @@ public class CookieUtil {
         }
         return null;
     }
+    //删除 Cookie
+    public static void del(HttpServletResponse response, String name){
+        set(response, name, null, 0);
+    }
 }

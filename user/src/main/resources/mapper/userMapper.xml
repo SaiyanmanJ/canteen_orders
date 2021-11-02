@@ -7,18 +7,55 @@
         values (#{name}, #{password}, #{schoolId}, #{phone}, #{role})
     </insert>
     <delete id="delete">
-        delete from user where id = #{id}
+        delete
+        from user
+        where id = #{id}
     </delete>
 
     <update id="update">
-        update user set name = #{name}, password = #{password}, school_id = #{schoolId}, phone = #{phone}, role = #{role} where id = #{id}
+        update user
+        set name      = #{name},
+            password  = #{password},
+            school_id = #{schoolId},
+            phone     = #{phone},
+            role      = #{role}
+        where id = #{id}
     </update>
 
 
-
     <select id="getUserById" resultType="com.wj.user.entity.User">
-        select * from user where id = #{id}
+        select *
+        from user
+        where id = #{id}
     </select>
+    <select id="getUserByName" resultMap="resultUser">
+        select user.id     uid,
+               user.name   uname,
+               password,
+               phone,
+               role,
+               school.id   sid,
+               school.name sname,
+               region_name,
+               country_name
+        from user, school
+        where user.name = #{name} and user.school_id = school.id
+    </select>
+
+    <resultMap id="resultUser" type="com.wj.user.entity.User">
+        <id property="id" column="uid"/>
+        <result property="name" column="uname"/>
+        <result property="password" column="password"/>
+        <result property="phone" column="phone"/>
+        <result property="role" column="role"/>
+        <association property="school" column="school_id" javaType="com.wj.user.entity.School">
+            <id property="id" column="sid"/>
+            <result property="name" column="sname"/>
+            <result property="regionName" column="region_name"/>
+            <result property="countryName" column="country_name"/>
+        </association>
+
+    </resultMap>
 
 </mapper>
 
