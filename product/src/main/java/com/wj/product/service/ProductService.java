@@ -1,5 +1,6 @@
 package com.wj.product.service;
 
+import com.wj.dto.OrderDTO;
 import com.wj.dto.OrderItemDTO;
 import com.wj.product.entity.Product;
 
@@ -36,7 +37,7 @@ public interface ProductService {
     List<Product> getProductsByIds(List<Long> ids);
 
     //    减库存
-    void decrease(List<OrderItemDTO> orderItemDTOList);
+    void decrease(OrderDTO orderDTO);
 
     //查食堂一层的窗口的商品展示在前端
 

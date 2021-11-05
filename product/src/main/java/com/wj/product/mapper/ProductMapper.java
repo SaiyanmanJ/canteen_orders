@@ -24,4 +24,8 @@ public interface ProductMapper {
     List<Product> getProductsByIds(List<Long> ids);
 
     void updateByMap(List<OrderItemDTO> orderItemDTOList);
+
+    void decreaseStockByList(List<Long[]> productIdDecreaseCount);
+
+    void increaseStockByList(List<Long[]> productIdDecreaseCount);
 }

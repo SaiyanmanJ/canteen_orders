@@ -1,19 +1,25 @@
 package com.wj.product.service.impl;
 
 import cn.hutool.json.JSONUtil;
+import com.rabbitmq.client.Channel;
+import com.wj.dto.OrderDTO;
 import com.wj.dto.OrderItemDTO;
 import com.wj.product.enums.ProductStatusEnum;
 import com.wj.product.entity.Product;
 import com.wj.product.exception.ProductException;
 import com.wj.product.mapper.ProductMapper;
-import com.wj.product.message.StreamClient;
 import com.wj.product.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitHandler;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
@@ -21,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,15 +43,13 @@ import java.util.function.Function;
  * @author Wang Jing
  * @time 2021/10/11 20:20
  */
+@RabbitListener(queues = "stock.increase.queue", ackMode = "MANUAL")
 @Service
 @Slf4j
 public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductMapper productMapper;
-
-    @Autowired
-    private StreamClient streamClient;
 
     @Autowired
     private StringRedisTemplate redisTemplate;
@@ -54,6 +59,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ThreadPoolExecutor executor;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Override
     public List<Product> getSellerProducts(Long sellerId) {
@@ -134,9 +142,11 @@ public class ProductServiceImpl implements ProductService {
     //    减库存
     @Override
 //    @Transactional  //事务 放在decreaseProcess
-    public void decrease(List<OrderItemDTO> orderItemDTOList) {
+    public void decrease(OrderDTO orderDTO) {
         //            发送MQ消息 要整体发送订单项中商品扣完后的商品信息，这样如果中间报错，直接不发送
-        decreaseProcess(orderItemDTOList);
+        decreaseProcess(orderDTO); //一般没有异常就代表减库存成功
+        rabbitTemplate.convertAndSend("stock.event.exchange", "stock.delay", orderDTO);
+//        messageService.sendToDelayOutput(JSONUtil.toJsonStr(orderDTO));
 //        log.debug("nacos-product-service 发送到 mq ：{}", products);
 //        streamClient.output().send(MessageBuilder.withPayload(products).build());
     }
@@ -265,24 +275,27 @@ public class ProductServiceImpl implements ProductService {
 //        log.info("mysql减库存成功");
 //    }
     @Transactional  //加上事务
-    public void decreaseProcess(List<OrderItemDTO> orderItemDTOList) {
-        log.info("开始减redis库存");
+    public void decreaseProcess(OrderDTO orderDTO) {
+        final List<Long[]> productIdDecreaseCount = orderDTO.getProductIdDecreaseCount();
+        log.info("开始减redis库存: {}", productIdDecreaseCount);
+
         //发过来前要检查不能为空，这里就不检查了
-        for (int i = 0; i < orderItemDTOList.size(); i++) {
-            OrderItemDTO orderItemDTO = orderItemDTOList.get(i);
-            String key = "ps" + orderItemDTO.getId();
+        for (int i = 0;i < productIdDecreaseCount.size();i++) {
+            Long[] pc = productIdDecreaseCount.get(i);
+            String key = "ps" + pc[0];
+
             //查一下在不在
             Boolean hasKey = redisTemplate.hasKey(key);
             if (hasKey) {
-                Long decrease = redisTemplate.opsForValue().decrement(key, orderItemDTO.getCount());
+                //存在就减
+                Long decrease = redisTemplate.opsForValue().decrement(key, pc[1]);
 //            判断商品是否存在
                 if (decrease < 0) { //不够减
                     log.info("商品数量不够减！");
                     //从这个产品到以前的产品都恢复库存
                     for (int j = i; j >= 0; j--) {
-                        orderItemDTO = orderItemDTOList.get(i);
-                        key = "ps" + orderItemDTO.getId();
-                        redisTemplate.opsForValue().increment(key, orderItemDTO.getCount()); //加回去
+                        Long[] pc1 = productIdDecreaseCount.get(i);
+                        redisTemplate.opsForValue().increment("ps" + pc1[0], pc1[1]); //加回去
                     }
                     //抛出商品不够的异常
                     throw new ProductException(ProductStatusEnum.PRODUCT_COUNT_NOT_ENOUGH);
@@ -291,27 +304,51 @@ public class ProductServiceImpl implements ProductService {
                 log.info("商品不存在！");
                 //从这个产品到以前的产品都恢复库存, 注意这个没减，所以呢从i - 1开始往回减
                 for (int j = i - 1; j >= 0; j--) {
-                    orderItemDTO = orderItemDTOList.get(i);
-                    key = "ps" + orderItemDTO.getId();
-                    redisTemplate.opsForValue().increment(key, orderItemDTO.getCount()); //加回去
+                    Long[] pc1 = productIdDecreaseCount.get(i);
+                    redisTemplate.opsForValue().increment("ps" + pc1[0], pc1[1]); //加回去
                 }
                 //抛出商品不存在异常
                 throw new ProductException(ProductStatusEnum.PRODUCT_NOT_EXIST);
             }
         }
 
-        log.info("减redis库存成功,开始减批量更新mysql库存");
-        //发送到rabbitmq异步减库存
-//        streamClient.output().send(MessageBuilder.withPayload(orderItemDTOList).build());
+        log.info("减redis库存成功,开始后台异步更新mysql库存");
 
         CompletableFuture<Boolean> updateCount = CompletableFuture.supplyAsync(() -> {
 //            log.info("backup:{} {}", orderItemDTOList);
-            updateByMap(orderItemDTOList);
+//            updateByMap(orderItemDTOList);
+            decreaseStockByList(productIdDecreaseCount);
             return true;
         }, executor);
+    }
 
-
-//        log.info("mysql减库存成功");
+    //加库存回来
+    @RabbitHandler
+    public void increaseStock(OrderDTO orderDTO, Message message, Channel channel){
+        log.info("加库存");
+        //回复ack
+        try {
+            log.info("加库存回来");
+            List<Long[]> productIdDecreaseCount = orderDTO.getProductIdDecreaseCount();
+            for(Long[] pc: productIdDecreaseCount){
+                redisTemplate.opsForValue().increment("ps" + pc[0], pc[1]);
+            }
+            productMapper.increaseStockByList(productIdDecreaseCount); //更新数据库
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (IOException e) {
+            log.error("加库存异常");
+            try {
+                //如果消费失败 重回队列 reqeue = true
+                channel.basicReject(message.getMessageProperties().getDeliveryTag(), true);
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+            e.printStackTrace();
+        }
+        log.info("加库存完成");
+    }
+    private void decreaseStockByList(List<Long[]> productIdDecreaseCount) {
+        productMapper.decreaseStockByList(productIdDecreaseCount);
     }
 
     //关于redis减库存的测试代码

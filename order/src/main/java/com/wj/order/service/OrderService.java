@@ -1,5 +1,6 @@
 package com.wj.order.service;
 
+import com.wj.dto.OrderDTO;
 import com.wj.dto.OrderItemDTO;
 import com.wj.order.entity.Order;
 import com.wj.order.entity.OrderItem;
@@ -26,8 +27,12 @@ public interface OrderService {
 
     List<OrderItemDTO> getProductInfo(List<OrderItem> orderItems);
 
+    OrderDTO getOrderDTO(List<OrderItem> orderItems, Long orderId);
+
     Order getOrderById(Long id);
 
     // 只能卖家操作
     Order finished(Long id);
+
+    Order getById(Long id);
 }

@@ -53,8 +53,8 @@ public class ProductTest {
     @Test
     public void testDecrease(){
         List<OrderItemDTO> orderItemDTOList = new ArrayList<>();
-        orderItemDTOList.add(new OrderItemDTO(1L, 2L, new BigDecimal(0.0)));
-        orderItemDTOList.add(new OrderItemDTO(1L, 2L, new BigDecimal(0.0)));
+        orderItemDTOList.add(new OrderItemDTO(1L, 2L, new BigDecimal(0.0), null, null));
+        orderItemDTOList.add(new OrderItemDTO(1L, 2L, new BigDecimal(0.0), null, null));
         productService.updateByMap(orderItemDTOList);
     }
 

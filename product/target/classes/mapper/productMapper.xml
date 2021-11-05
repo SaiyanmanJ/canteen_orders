@@ -23,6 +23,16 @@
             update product set count = count - #{item.count} where id = #{item.id}
         </foreach>
     </update>
+    <update id="decreaseStockByList">
+        <foreach collection="list" item="item" separator=";" open="" close="">
+            update product set count = count - #{item.[1]} where id = #{item.[0]}
+        </foreach>
+    </update>
+    <update id="increaseStockByList">
+        <foreach collection="list" item="item" separator=";" open="" close="">
+            update product set count = count + #{item.[1]} where id = #{item.[0]}
+        </foreach>
+    </update>
     <select id="getProductsBySellerId" resultType="com.wj.product.entity.Product">
         select *
         from product

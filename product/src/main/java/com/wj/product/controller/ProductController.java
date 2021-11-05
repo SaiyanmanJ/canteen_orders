@@ -1,10 +1,10 @@
 package com.wj.product.controller;
 
 import com.wj.commons.CommonResult;
+import com.wj.dto.OrderDTO;
 import com.wj.dto.OrderItemDTO;
 import com.wj.product.entity.Product;
 import com.wj.product.entity.Seller;
-import com.wj.product.service.MessageService;
 import com.wj.product.service.ProductService;
 import com.wj.product.service.SellerService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,9 +24,6 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
-
-    @Autowired
-    private MessageService messageService;
 
     @Autowired
     private SellerService service;
@@ -86,17 +83,17 @@ public class ProductController {
 //    减库存
 
     @PostMapping(value = "/product/decrease")
-    public CommonResult decreaseProductCount(@RequestBody List<OrderItemDTO> orderItemDTOList){
-        productService.decrease(orderItemDTOList);
+    public CommonResult decreaseProductCount(@RequestBody OrderDTO orderDTO){
+        productService.decrease(orderDTO);
         return new CommonResult(200, "减库存成功");
     }
 
-    @GetMapping(value = "/product/mq")
-    public void output(){
-        String msg = "哈哈哈";
-        log.info("product 发送消息: " + msg);
-        messageService.send(msg);
-    }
+//    @GetMapping(value = "/product/mq")
+//    public void output(){
+//        String msg = "哈哈哈";
+//        log.info("product 发送消息: " + msg);
+//        messageService.send(msg);
+//    }
 
     @GetMapping(value = "/product/redistest")
     public CommonResult test(){

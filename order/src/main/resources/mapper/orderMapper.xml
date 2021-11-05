@@ -26,6 +26,14 @@
         from orders
         where id = #{orderId}
     </select>
+    <select id="getById" resultMap="resultOrder">
+        select *
+        from orders
+        where id = #{id}
+    </select>
 
+    <resultMap id="resultOrder" type="com.wj.order.entity.Order">
+
+    </resultMap>
 </mapper>
 

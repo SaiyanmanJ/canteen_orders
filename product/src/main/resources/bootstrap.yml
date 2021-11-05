@@ -24,12 +24,35 @@ spring:
         group: PRODUCT_GROUP # 组名
         namespace: 2b4c9c15-7094-4ed0-aa0a-16751d10e760
         refresh-enabled: true # 支持刷新功能
-    stream:
-      bindings: # 服务的整合处理
-        myMessage: # 这个名字是一个通道的名称 默认就是Exchange的名称
-#          destination: product # 表示要使用的Exchange名称定义
-          group: order # 表示分组 同一组中的服务不会重复消费同一个消息
-          content-type: application/json # 设置消息类型，本次为json，文本则设置“text/plain”
+#    stream:
+#      bindings: # exchange和queue之间的绑定
+##        output: # 这个名字是一个通道的名称 默认就是Exchange的名称
+##          destination: decrease.exchange # 表示要使用的Exchange名称定义
+###          group: product # 表示分组 同一组中的服务不会重复消费同一个消息
+##          content-type: application/json # 设置消息类型，本次为json，文本则设置“text/plain”
+#        delay-output:
+#          destination: delay.exchange
+#          content-type: application/json
+#          group: delay-order
+#          producer:
+#            requiredGroups: delay-order
+#        increase-stock:
+#          destination: increase.exchange
+#          content-type: application/json
+#          group: increase-order
+#      rabbit:
+#        bindings:
+#          delay-output:
+#            producer:
+#              ttl: 10000 # 10s 后队列没被消费，就会称为死信
+#              autoBindDlq: true
+#              exchangeType: direct
+##              routingKeyExpression: headers.delay
+#          increase-stock:
+#            consumer:
+#              acknowledgeMode: manual # 手动消费
+#              exchangeType: direct
+##              bindingRoutingKey: increase
 
   profiles:
     active: dev

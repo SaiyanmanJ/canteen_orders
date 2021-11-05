@@ -4,7 +4,6 @@ import com.wj.commons.CommonResult;
 import com.wj.order.entity.Order;
 import com.wj.order.entity.OrderItem;
 import com.wj.order.entity.Product;
-import com.wj.order.service.MessageService;
 import com.wj.order.service.OrderItemService;
 import com.wj.order.service.OrderService;
 import com.wj.order.service.ProductService;
@@ -36,8 +35,6 @@ public class OrderController {
     @Autowired
     private OrderItemService orderItemService;
 
-    @Autowired
-    private MessageService messageService;
     /**
      * 1.参数校验
      * 2.查询商品信息 (调用商品服务)

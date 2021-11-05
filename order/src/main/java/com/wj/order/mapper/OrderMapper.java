@@ -23,4 +23,6 @@ public interface OrderMapper {
     void delete(Long orderId);
 
     void update(Order order);
+
+    Order getById(Long id);
 }

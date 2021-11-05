@@ -1,8 +1,10 @@
 package com.wj.order.service.impl;
 
 import cn.hutool.core.util.IdUtil;
+import com.rabbitmq.client.Channel;
 import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.wj.commons.CommonResult;
+import com.wj.dto.OrderDTO;
 import com.wj.dto.OrderItemDTO;
 import com.wj.order.entity.Order;
 import com.wj.order.entity.OrderItem;
@@ -14,14 +16,21 @@ import com.wj.order.service.OrderItemService;
 import com.wj.order.service.OrderService;
 import com.wj.order.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitHandler;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sun.security.krb5.internal.PAData;
 
+import javax.xml.namespace.QName;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -35,6 +44,7 @@ import java.util.function.Function;
  * @author Wang Jing
  * @time 2021/10/12 15:54
  */
+@RabbitListener(queues = "order.check.queue", ackMode = "MANUAL")
 @Service
 @Slf4j
 public class OrderServiceImpl implements OrderService {
@@ -51,6 +61,9 @@ public class OrderServiceImpl implements OrderService {
     //自定义线程池
     @Autowired
     private ThreadPoolExecutor executor;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Override
     public List<Order> getOrdersByUserId(Long userId) {
@@ -107,7 +120,7 @@ public class OrderServiceImpl implements OrderService {
 //        log.info("创建订单结束");
 //        return order;
 //    }
-    @Transactional
+    @Transactional //本地事务，只能控制自己的回滚，控制不了其它事务的回滚
     @Override
     public Order insert(Order order) {
         //异步编排流程
@@ -127,9 +140,7 @@ public class OrderServiceImpl implements OrderService {
 
         //查询完商品后,没问题，异步减库存
         final CompletableFuture<BigDecimal> decreaseFuture = productsFuture.thenApplyAsync((products) -> {
-
             log.info("减库存");
-            productService.decrease(getProductInfo(orderItems));
             //生成id 注意使用getSnowflake()不要用createSnowflake()
             Long orderId = IdUtil.getSnowflake(1L, 1L).nextId();
             log.info("处理订单id，订单项id");
@@ -142,18 +153,23 @@ public class OrderServiceImpl implements OrderService {
             log.info("计算订单价格");
             BigDecimal totalPrice = calTotalPrice(orderItems, products);
             order.setPrice(totalPrice);
+
+            //减库存
+//            productService.decrease(getProductInfo(orderItems));
+            productService.decrease(getOrderDTO(orderItems, orderId));
             return totalPrice;
         }, executor);
 
-        //减库存完成, 总价计算完成, 异步创建订单项  个人认为，只要减库存成功，插入订单项必须成功，如果有异常也得成功
-        final CompletableFuture<Boolean> createOrderItemFuture = decreaseFuture.thenApplyAsync((totalPrice) -> {
-            log.info("插入订单项 {}", orderItems);
-            orderItemService.insertList(orderItems);
-            return true;
-        }, executor);
+//        final CompletableFuture<Boolean> createOrderItemFuture = decreaseFuture.thenApplyAsync((totalPrice) -> {
+//            log.info("插入订单项 {}", orderItems);
+//            orderItemService.insertList(orderItems);
+//            return true;
+//        }, executor);
 
-        //减库存完成, 总价计算完成, 异步创建订单
+        //减库存完成, 总价计算完成, 异步创建订单项，订单，确保订单插入成功时，订单项肯定成功了，免得用户查的时候有订单，没订单项
         final CompletableFuture<BigDecimal> createOrderFuture = decreaseFuture.thenApplyAsync((totalPrice) -> {
+            log.debug("插入订单项 {}", orderItems);
+            orderItemService.insertList(orderItems);
             log.debug("插入订单");
             orderMapper.insert(order);
             return totalPrice;
@@ -164,7 +180,7 @@ public class OrderServiceImpl implements OrderService {
                 // 调用支付
                 boolean payStatus = false;
                 log.info("调用支付");
-                payStatus = true;
+                payStatus = false; //支付失败
                 // 调用支付 参数是totalPrice, 用户账号
                 if (payStatus) {
                     order.setPayStatus(1); //支付成功
@@ -179,7 +195,7 @@ public class OrderServiceImpl implements OrderService {
 
         try {
             //等待完成
-            CompletableFuture.allOf(createOrderFuture, createOrderItemFuture).get();
+            CompletableFuture.allOf(createOrderFuture).get();
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         }
@@ -188,6 +204,31 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
+    //监听库存的服务
+    @RabbitHandler
+    public void checkOrder(OrderDTO orderDTO, Message message, Channel channel){
+        log.info("检查订单状态");
+        Order order = orderMapper.getById(orderDTO.getOrderId());
+        //订单是否为空
+        if(order != null){
+            if(!order.getPayStatus().equals(OrderStatusEnum.PAYED.getCode())){
+                log.error("订单未支付");
+                order.setPayStatus(OrderStatusEnum.ORDER_CANCAL.getCode());
+                orderMapper.update(order);
+                rabbitTemplate.convertAndSend("stock.event.exchange", "stock.increase", orderDTO);
+            }
+        } else {
+            log.error("订单不存在！");
+            rabbitTemplate.convertAndSend("stock.event.exchange", "stock.increase", orderDTO);
+        }
+        //回复 ack
+        try {
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false); //不批量回复本消息 ack
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        log.info("订单检查完成");
+    }
     @Override
     public void delete(Long orderId) {
         orderMapper.delete(orderId);
@@ -222,10 +263,20 @@ public class OrderServiceImpl implements OrderService {
     public List<OrderItemDTO> getProductInfo(List<OrderItem> orderItems) {
         List<OrderItemDTO> orderItemDTOList = new ArrayList<>();
         for (OrderItem orderItem : orderItems) {
-            orderItemDTOList.add(new OrderItemDTO(orderItem.getProduct().getId(), orderItem.getCount(), null));
+            orderItemDTOList.add(new OrderItemDTO(orderItem.getProduct().getId(), orderItem.getCount(), null, orderItem.getId(), orderItem.getOrderId()));
         }
         return orderItemDTOList;
     }
+
+    @Override
+    public OrderDTO getOrderDTO(List<OrderItem> orderItems, Long orderId) {
+        List<Long[]> pac = new ArrayList<>();
+        for(OrderItem orderItem: orderItems){
+            pac.add(new Long[]{orderItem.getProduct().getId(), orderItem.getCount()}); // product id, 购买数量
+        }
+        return new OrderDTO(orderId, pac);
+    }
+
 
     @Override
     public Order getOrderById(Long id) {
@@ -255,5 +306,10 @@ public class OrderServiceImpl implements OrderService {
         List<OrderItem> orderItems = orderItemService.getOrderItemsByOrderId(order.getId());
         order.setOrderItems(orderItems);
         return order;
+    }
+
+    @Override
+    public Order getById(Long id) {
+        return orderMapper.getById(id);
     }
 }

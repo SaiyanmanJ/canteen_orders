@@ -1,5 +1,6 @@
 package com.wj.order.service;
 
+import com.wj.dto.OrderDTO;
 import com.wj.dto.OrderItemDTO;
 import com.wj.order.entity.Product;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -20,5 +21,5 @@ public interface ProductService {
 
     //    减库存
     @PostMapping(value = "/product/decrease")
-    void decrease(@RequestBody List<OrderItemDTO> orderItemDTOList);
+    void decrease(@RequestBody OrderDTO orderDTO);
 }

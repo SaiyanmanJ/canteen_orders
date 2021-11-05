@@ -22,12 +22,33 @@ spring:
         refresh-enabled: true # 支持刷新功能
     refresh:
       enabled: true
-    stream:
-      bindings: # 服务的整合处理
-        myMessage: # 这个名字是一个通道的名称
-#          destination: product # 表示要使用的Exchange名称定义
-          group: order # 表示要使用的Queue的名称定义
-          content-type: application/json # 设置消息类型，本次为json，文本则设置“text/plain”
+
+#    stream:
+#      bindings:
+##        input:
+##          destination: decrease.exchange # 交换机名称
+##          content-type: application/json # 设置消息类型，本次为json，文本则设置“text/plain”
+##          group: order # destination.order.service 就是队列名称
+#        delay-input:
+#          destination: delay.exchange # 交换机名称
+#          content-type: application/json # 设置消息类型，本次为json，文本则设置“text/plain”
+#          group: delay-order.dlq # 死信队列
+#        increase-stock:
+#          destination: increase.exchange
+#          contend-type: application/json
+#          group: increase-order
+#      rabbit:
+#        bindings:
+#          delay-input:
+#            consumer:
+#              acknowledgeMode: manual # 手动回复
+#              exchangeType: direct
+##              bindingRoutingKey: delay
+#          increase-stock:
+#            producer:
+#              acknowledgeMode: manual # 手动消费
+##              routingKeyExpression: increase
+#              exchangeType: direct
   profiles:
     active: dev
 

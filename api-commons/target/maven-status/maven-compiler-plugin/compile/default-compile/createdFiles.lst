@@ -1,2 +1,5 @@
 com\wj\dto\OrderItemDTO.class
+com\wj\utils\TokenUtil.class
 com\wj\commons\CommonResult.class
+com\wj\dto\OrderDTO.class
+com\wj\enums\RoleEmum.class

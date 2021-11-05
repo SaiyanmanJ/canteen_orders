@@ -19,6 +19,7 @@ public class CookieUtil {
      */
     public static void set(HttpServletResponse response, String name, String value, int maxAge){
         Cookie cookie = new Cookie(name, value);
+        cookie.setHttpOnly(true); //防止通过脚本读取cookie
         cookie.setPath("/");
         cookie.setMaxAge(maxAge);
         response.addCookie(cookie);

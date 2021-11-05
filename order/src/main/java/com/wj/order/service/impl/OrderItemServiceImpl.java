@@ -37,7 +37,7 @@ public class OrderItemServiceImpl implements OrderItemService {
     public List<OrderItemDTO> getOrderItemDTO(List<OrderItem> orderItems) {
         List<OrderItemDTO> orderItemDTOS = new ArrayList<>(orderItems.size());
         for (OrderItem orderItem: orderItems) {
-            orderItemDTOS.add(new OrderItemDTO(orderItem.getOrderId(), orderItem.getCount(), orderItem.getProduct().getPrice()));
+            orderItemDTOS.add(new OrderItemDTO(orderItem.getOrderId(), orderItem.getCount(), orderItem.getProduct().getPrice(), orderItem.getId(), orderItem.getOrderId()));
         }
         return orderItemDTOS;
     }

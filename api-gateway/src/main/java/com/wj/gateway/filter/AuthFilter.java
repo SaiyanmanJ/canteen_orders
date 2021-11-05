@@ -1,7 +1,7 @@
 package com.wj.gateway.filter;
 
 import com.wj.enums.RoleEmum;
-import com.wj.gateway.utils.CookieUtil;
+import com.wj.utils.TokenUtil;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +22,7 @@ import java.net.URI;
 
 /**
  * 权限校验 访问网址的权限
+ *
  * @author Wang Jing
  * @time 2021/10/17 12:29
  */
@@ -34,7 +35,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
     private StringRedisTemplate redisTemplate;
 
     /**
-     * 检验是否有token
+     * 请求权限校验
      *
      * @param exchange
      * @param chain
@@ -50,14 +51,15 @@ public class AuthFilter implements GlobalFilter, Ordered {
         log.info("权限校验");
         URI uri = exchange.getRequest().getURI();
         log.info("uri path: " + uri.getPath());
-        HttpCookie cookie = CookieUtil.get(exchange, "token");
 
         //验证身份 学生1 食堂工作人员2 学校其它工作人员3 校外人员4
-        if("/nacos-order-service/order/create".equals(uri.getPath())){
+        if ("/nacos-order-service/order/create".equals(uri.getPath())) {
             log.info("访问 /order/create");
             //谁都可以下订单，前提是已经登录过了
             // 卖家没登录
-            if(cookie == null || StringUtils.isEmpty(redisTemplate.opsForValue().get(String.format("token_%s", cookie.getValue())))){
+            String token = exchange.getRequest().getHeaders().getFirst("token");
+            log.info("token:{}", token);
+            if (token == null || StringUtils.isEmpty(redisTemplate.opsForValue().get(String.format("token_%s", TokenUtil.verify(token))))) {
                 log.info("用户未登录！");
                 //跳到登录页面
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
@@ -66,26 +68,17 @@ public class AuthFilter implements GlobalFilter, Ordered {
         }
 
         //只有食堂工作人员才能完成订单
-        if("/nacos-order-service/order/finish".equals(uri.getPath())){
+        if ("/nacos-order-service/order/finish".equals(uri.getPath())) {
             log.info("访问 /order/finish");
-            String token;
-
-            if(cookie == null){
+            String token = exchange.getRequest().getHeaders().getFirst("token");
+            if (token == null || StringUtils.isEmpty(redisTemplate.opsForValue().get(String.format("token_%s", TokenUtil.verify(token))))) {
                 log.info("用户未登录！");
-                //跳到登录页面, 没写，暂时返回401
+                //跳到登录页面
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 return exchange.getResponse().setComplete();
-            }else{
-                token = redisTemplate.opsForValue().get(String.format("token_%s", cookie.getValue()));
-                if(StringUtils.isEmpty(token)){
-                    log.info("用户未登录！");
-                    //跳到登录页面
-                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                    return exchange.getResponse().setComplete();
-                }
             }
-
-            if(token.charAt(0) != RoleEmum.IN_SCHOOL_CARTEEN_STUFF.getRoleId()){
+            String origin = TokenUtil.verify(token);
+            if (origin.charAt(5) != RoleEmum.IN_SCHOOL_CARTEEN_STUFF.getRoleId()) {
                 //用户权限错误
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 return exchange.getResponse().setComplete();
