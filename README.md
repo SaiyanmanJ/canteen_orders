@@ -1,28 +1,28 @@
-从零实现一个校园点餐系统(可能只是部分功能)。
+#### 介绍
+实现一个校园点餐系统的部分功能。
 
 作为微服务练手项目,不会追求业务的完全,可能只会完成部分功能，然后继续深入扩展，而不是横向扩展业务。
 
-开发期间会在语雀上记录完整历程，完成后公开记录。这里只记录功能的实现。
-
-目前使用框架，组件：
-* SpringBoot
-* mybatis
-* SpringCloud Alibaba
-  * nacos
-* SpringCloud
+#### 目前使用框架，组件
+* Spring Boot
+* MyBatis
+* Spring Cloud Alibaba
+  * Nacos
+* Spring Cloud
   * OpenFeign
-  * Stream
   * Gateway
-  * Zipkin
   * Sleuth
-* mysql
-* redis
-* rabbitmq
-* docker
+* MySql
+* Redis
+* RabbitMQ
+* Docker
+* Zipkin
 
 测试用工具：
-* postman 测请求
-* jemeter 压测
+* Postman 
+* JMeter
+
+#### 时间线
 2021/10/11
 * 创建项目
 
@@ -47,4 +47,22 @@
 * Spring Cloud Gateway 鉴权，创建订单只能由买家请求，设置订单完成状态只能由卖家请求
 * 加入 zipkin sleuth 进行服务跟踪
 
+2021/10/20
+* 对项目的性能进行测试，参照谷粒商城的jemeter压测。
+
+2021/10/23
+* 加入根据根据食堂和层数查询窗口菜品的功能，并使用redis缓存查询数据。
+
+2021/10/26
+* 使用redis优化下订单，查询商品时，先查询redis，并重置过期时间，没有的再查数据库，从数据库中查到之后存到redis中，并且指定过期时间。
+
+2021/10/28
+* 加入线程池，异步编排下订单的流程。
+* 使用Redisson实现分布式锁，避免同一服务的多台服务器，同时查询数据库，以获得相同数据。
+
+2021/10/31
+* 测试redis减库存的性能，找到合适的写法，最后用redis的自减和自增两个原子操作，用类似乐观锁的形式实现redis减库存，同时异步更新数据库的库存，不再用redisson。
+
+2021/11/5
+* 使用rabbitmq延时队列，解决超时未支付问题；修改了下订单部分流程，不再异步插入订单项和订单，而是先插入订单项再插入订单。
 
