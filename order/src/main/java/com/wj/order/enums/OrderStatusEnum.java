@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 public enum OrderStatusEnum {
     ORDER_CANCAL(-1, "订单已取消"),
-    NEW(0, "新订单"),
+    NOT_PAY(0, "新订单"),
     PAYED(1, "已支付"),
     FINISH(2, "完结"),
     NOT_EXIST(4,"订单不存在"),

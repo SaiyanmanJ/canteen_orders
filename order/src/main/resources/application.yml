@@ -22,10 +22,24 @@ management:
 #  nacos-user-service: http://nacos-product-service
 project:
   thread:
-    core-size: 22
-    max-size: 22
+    core-size: 1
+    max-size: 1
     keep-alive-time: 30
+feign:
+  compression:
+    request:
+      enabled: true
+      mime-types: text/html, text/xml, text/plain, application/xml, application/json
+      min-request-size: 2048 # 达到此大小就压缩
+    response:
+      enabled: true
 
-logging:
-  level:
-    root: info
+  httpclient:
+    enabled: true
+
+  client:
+    config:
+      default: # 设置全局超时时间
+        connectTimeout: 2000 # 连接超时时间
+        readTimeout: 5000 # 处理超时时间
+

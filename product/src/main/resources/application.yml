@@ -11,12 +11,8 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
 
-logging:
-  level:
-    root: info
-
 project:
   thread:
-    core-size: 22
-    max-size: 22
+    core-size: 1
+    max-size: 1
     keep-alive-time: 30

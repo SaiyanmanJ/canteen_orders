@@ -1,5 +1,6 @@
 package com.wj.user.service;
 
+import com.wj.commons.CommonResult;
 import com.wj.user.entity.User;
 
 /**
@@ -15,5 +16,8 @@ public interface UserService {
 
     User getUserById(Long userId);
 
-    User getUserByName(String name);
+    User getUserByNameAndPassward(String name, String passward, String role);
+
+    String encrypt(String passward);
+    Boolean userExistStatus(String name);
 }

@@ -2,6 +2,7 @@ package com.wj.gateway.config;
 
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -14,8 +15,15 @@ import reactor.core.publisher.Mono;
 public class RateLimitConfig {
 
     @Bean
-    KeyResolver productKeyResolver() {
-        // 对请求地址限流
+    public KeyResolver urlPathResolver() {
+        // 对请求路径限流
         return exchange -> Mono.just(exchange.getRequest().getPath().value());
     }
+    @Primary
+    @Bean
+    public KeyResolver ipResolver() {
+        // 对请求ip限流
+        return exchange -> Mono.just(exchange.getRequest().getRemoteAddress().getAddress().getHostAddress());
+    }
+
 }

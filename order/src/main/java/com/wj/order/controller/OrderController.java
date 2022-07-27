@@ -1,6 +1,7 @@
 package com.wj.order.controller;
 
 import com.wj.commons.CommonResult;
+import com.wj.order.annotations.TokenCheck;
 import com.wj.order.entity.Order;
 import com.wj.order.entity.OrderItem;
 import com.wj.order.entity.Product;
@@ -10,10 +11,7 @@ import com.wj.order.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,6 +22,7 @@ import java.util.List;
  */
 @RestController
 @Slf4j
+@RequestMapping(value = "/order")
 public class OrderController {
 
     @Autowired
@@ -43,7 +42,8 @@ public class OrderController {
      * 5.订单入库
      */
 
-    @PostMapping(value = "/order/create")
+//    @TokenCheck
+    @PostMapping(value = "/create")
     public CommonResult create(@RequestBody Order order){
         log.debug("订单传入：" + order);
         Order order2 = orderService.insert(order);
@@ -56,7 +56,7 @@ public class OrderController {
         return new CommonResult(200, "订单已创建, 支付成功", order2);
     }
 
-    @PostMapping(value = "/order/finish/{id}")
+    @PostMapping(value = "/finish/{id}")
     public CommonResult finished(@PathVariable("id") Long id){
         log.debug("订单id: " + id);
         Order order = orderService.finished(id);

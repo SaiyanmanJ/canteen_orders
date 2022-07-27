@@ -24,6 +24,8 @@ import java.util.Map;
 @Slf4j
 public class MyRabbitConfig {
 
+    private long ttl = 10000; //单位ms
+
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
@@ -60,7 +62,7 @@ public class MyRabbitConfig {
         Map<String, Object> args = new HashMap<>();
         args.put("x-dead-letter-exchange", "stock.event.exchange");
         args.put("x-dead-letter-routing-key", "order.check");
-        args.put("x-message-ttl", 10000); //延迟10s
+        args.put("x-message-ttl", ttl); //延迟10s
         return new Queue("stock.delay.queue", true, false, false, args);
     }
 
@@ -71,12 +73,18 @@ public class MyRabbitConfig {
     }
     //创建交换机和队列的绑定关系
 
+//    减库存队列
+    @Bean
+    public Queue stockDecreaseQueue(){
+        return new Queue("stock.decrease.queue", true, false, false);
+    }
     //减库存 绑定关系
-//    @Bean
-//    public Binding stockDecreaseBinding() {
-//        // 目的地 目的地类型 交换机 路由键 参数
-//        return new Binding("stock.decrease.queue", Binding.DestinationType.QUEUE, "stock.event.exchange", "order.check.#", null);
-//    }
+
+    @Bean
+    public Binding stockDecreaseBinding() {
+        // 目的地 目的地类型 交换机 路由键 参数
+        return new Binding("stock.decrease.queue", Binding.DestinationType.QUEUE, "stock.event.exchange", "stock.decrease.#", null);
+    }
 
     //延迟队列和交换机的绑定关系
     @Bean
@@ -90,4 +98,5 @@ public class MyRabbitConfig {
     public Binding increaseStockBinding(){
         return new Binding("stock.increase.queue", Binding.DestinationType.QUEUE, "stock.event.exchange", "stock.increase.#", null);
     }
+
 }

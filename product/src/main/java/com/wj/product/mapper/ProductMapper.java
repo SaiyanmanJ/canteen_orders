@@ -3,6 +3,8 @@ package com.wj.product.mapper;
 import com.wj.dto.OrderItemDTO;
 import com.wj.product.entity.Product;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
 import java.util.List;
 import java.util.Map;
 
@@ -28,4 +30,8 @@ public interface ProductMapper {
     void decreaseStockByList(List<Long[]> productIdDecreaseCount);
 
     void increaseStockByList(List<Long[]> productIdDecreaseCount);
+
+    List<Product> getAllProducts();
+
+    List<Product> getProductsBySellerIdLimit(@Param("sellerId") Long sellerId, @Param("num") Long num);
 }

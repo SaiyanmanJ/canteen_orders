@@ -1,5 +1,6 @@
 package com.wj.product.service;
 
+import com.wj.commons.CommonResult;
 import com.wj.dto.OrderDTO;
 import com.wj.dto.OrderItemDTO;
 import com.wj.product.entity.Product;
@@ -16,7 +17,8 @@ public interface ProductService {
 
     //    根据窗口id查询
     List<Product> getSellerProducts(Long sellerId);
-
+//    全部商品数据
+    List<Product> getAllProducts();
     //    查
     Product getProductById(Long productId);
 
@@ -42,4 +44,8 @@ public interface ProductService {
     //查食堂一层的窗口的商品展示在前端
 
     void redisTest();
+
+    List<Product> dbGetSellerProducts(Long sellerId);
+
+    List<Product> dbGetSellerProductsLimit(Long sellerId, Long num);
 }

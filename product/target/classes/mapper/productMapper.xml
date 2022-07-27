@@ -4,8 +4,8 @@
 <mapper namespace="com.wj.product.mapper.ProductMapper">
 
     <insert id="insert">
-        insert into product (name, price, additinal, seller_id)
-        values (#{name}, #{price}, #{additinal}, #{sellerId})
+        insert into product (name, price, additinal, seller_id, count)
+        values (#{name}, #{price}, #{additinal}, #{sellerId}, #{count})
     </insert>
     <delete id="delete">
         delete from product where id = #{id}
@@ -25,7 +25,7 @@
     </update>
     <update id="decreaseStockByList">
         <foreach collection="list" item="item" separator=";" open="" close="">
-            update product set count = count - #{item.[1]} where id = #{item.[0]}
+            update product set count = count - #{item.[1]} where id = #{item.[0]} and count > #{item.[1]}
         </foreach>
     </update>
     <update id="increaseStockByList">
@@ -39,6 +39,12 @@
         where seller_id = #{sellerId}
     </select>
 
+    <select id="getProductsBySellerIdLimit" resultType="com.wj.product.entity.Product">
+        select *
+        from product
+        where seller_id = #{sellerId}
+        limit #{num}
+    </select>
     <select id="getProductById" resultType="com.wj.product.entity.Product">
         select * from product where id = #{productId}
     </select>
@@ -49,6 +55,10 @@
         <foreach collection="list" item="id" open="(" close=")" separator=",">
             #{id}
         </foreach>
+    </select>
+
+    <select id="getAllProducts" resultType="com.wj.product.entity.Product">
+        select * from product;
     </select>
 </mapper>
 

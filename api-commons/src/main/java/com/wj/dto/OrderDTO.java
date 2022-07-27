@@ -18,5 +18,5 @@ public class OrderDTO {
 
     private Long orderId;
 
-    private List<Long[]> productIdDecreaseCount;
+    private List<Long[]> productIdDecreaseCount; // 2 x n的数组 id, 购买数量
 }

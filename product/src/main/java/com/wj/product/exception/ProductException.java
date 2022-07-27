@@ -8,6 +8,7 @@ import com.wj.product.enums.ProductStatusEnum;
  */
 public class ProductException extends RuntimeException{
 
+
     private Integer code;
 
     public ProductException(Integer code, String message){

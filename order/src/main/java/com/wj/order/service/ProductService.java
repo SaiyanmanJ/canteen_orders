@@ -20,6 +20,6 @@ public interface ProductService {
     List<Product> getProductsByIds(@RequestBody List<Long> ids);
 
     //    减库存
-    @PostMapping(value = "/product/decrease")
+    @PostMapping(value = "/product/change/decrease")
     void decrease(@RequestBody OrderDTO orderDTO);
 }

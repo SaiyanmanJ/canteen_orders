@@ -1,8 +1,22 @@
 server:
   port: 8100
+  servlet:
+    session:
+      timeout: 30m
+
 spring:
   main:
     allow-bean-definition-overriding: true
+  cloud:
+    gateway:
+      filter:
+        circuit-breaker:
+          enabled: true
+  session:
+    store-type: redis # Session store type.
+    redis:
+      flush-mode: on_save # Sessions flush mode.
+      namespace: spring:session # Namespace for keys used to store sessions.
 
 #  cloud:
 ##    gateway:
