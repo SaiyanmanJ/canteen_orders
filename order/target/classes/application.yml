@@ -36,8 +36,10 @@ feign:
 
   httpclient:
     enabled: true
+
   client:
     config:
       default: # 设置全局超时时间
         connectTimeout: 2000 # 连接超时时间
         readTimeout: 5000 # 处理超时时间
+

@@ -4,7 +4,9 @@ import cn.hutool.Hutool;
 import cn.hutool.json.JSON;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConfirmCallback;
 import com.wj.dto.OrderDTO;
 import com.wj.dto.OrderItemDTO;
 import com.wj.product.enums.ProductStatusEnum;
@@ -19,14 +21,17 @@ import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.RedisConnectionException;
 import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.AsyncRabbitTemplate;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.connection.RabbitConnectionFactoryBean;
+import org.springframework.amqp.rabbit.core.RabbitOperations;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.StringRedisConnection;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -70,6 +75,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+
+//    @Autowired
+//    private AsyncRabbitTemplate asyncRabbitTemplate;
 
     private static final String decreaseStockScript =
             "local KEYS = KEYS\n" +
@@ -374,10 +382,21 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional  //事务 放在decreaseProcess
     public void decrease(OrderDTO orderDTO) {
+        log.info("decrease proccess");
         //            发送MQ消息 要整体发送订单项中商品扣完后的商品信息，这样如果中间报错，直接不发送
         decreaseProcess(orderDTO); //一般没有异常就代表减库存成功
         rabbitTemplate.convertAndSend("stock.event.exchange", "stock.delay", orderDTO);
-//        messageService.sendToDelayOutput(JSONUtil.toJsonStr(orderDTO));
+        /*同步confirm比较慢*/
+//        Boolean seedFlag = rabbitTemplate.invoke(
+//                operations -> {
+//                    rabbitTemplate.convertAndSend("stock.event.exchange", "stock.delay", orderDTO);
+//                    return rabbitTemplate.waitForConfirms(2000);
+//                }
+//        );
+//        if(seedFlag != null && seedFlag) return;
+//      记录日志
+//        log.error("decrease send error: " + JSONUtil.toJsonStr(orderDTO));
+        //        messageService.sendToDelayOutput(JSONUtil.toJsonStr(orderDTO));
 //        log.debug("nacos-product-service 发送到 mq ：{}", products);
 //        streamClient.output().send(MessageBuilder.withPayload(products).build());
     }

@@ -16,3 +16,11 @@ project:
     core-size: 1
     max-size: 1
     keep-alive-time: 30
+#logging:
+##  config: classpath:logback.xml
+#  level:
+#    root: info
+spring:
+  rabbitmq:
+#    publisher-confirm-type: simple # 发送到broker后回调
+    publisher-returns: true # 发送到队列失败回调

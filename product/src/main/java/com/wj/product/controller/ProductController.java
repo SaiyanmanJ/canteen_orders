@@ -88,6 +88,7 @@ public class ProductController {
 
     @PostMapping(value = "/change/decrease")
     public CommonResult decreaseProductCount(@RequestBody OrderDTO orderDTO){
+        log.info("decrease controller");
         productService.decrease(orderDTO);
         return new CommonResult(200, "减库存成功");
     }
